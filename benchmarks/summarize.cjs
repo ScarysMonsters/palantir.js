@@ -84,7 +84,25 @@ if (network) {
     wsPingMs: cmp(np && np.steps.wsPingMs, nd && nd.steps.wsPingMs),
     errors: { palantir: (np && np.errors) || [], 'djs-selfbot-v13': (nd && nd.errors) || [] },
   };
-  for (const op of ['guildFetch', 'channelsFetch', 'userFetch', 'messagesFetch', 'send', 'edit', 'react', 'unreact', 'delete']) {
+  for (const op of [
+    'guildFetch',
+    'channelsFetch',
+    'messagesFetch',
+    'userFetchSelf',
+    'rolesFetch',
+    'roleCreate',
+    'roleEdit',
+    'roleDelete',
+    'membersFetch',
+    'memberFetch',
+    'guildEdit',
+    'channelEdit',
+    'send',
+    'edit',
+    'react',
+    'unreact',
+    'delete',
+  ]) {
     summary.network[op] = cmp(np && np.samples[op] && np.samples[op].median, nd && nd.samples[op] && nd.samples[op].median);
   }
 }
