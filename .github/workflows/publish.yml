@@ -10,8 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    env:
-      NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+      id-token: write # required for npm trusted publishing (OIDC) - no NPM_TOKEN needed
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -21,6 +20,11 @@ jobs:
         run: bun install
       - name: Run tests
         run: bun test
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Upgrade npm (trusted publishing requires npm >= 11.5.1)
+        run: npm install -g npm@latest
       - name: Publish to npm
-        if: ${{ env.NPM_CONFIG_TOKEN != '' }}
-        run: bun publish --access public
+        run: npm publish --access public
