@@ -60,6 +60,9 @@ class WebSocket {
 
     this._ws =
       protocols !== undefined ? new NativeWebSocket(url, protocols, nativeOptions) : new NativeWebSocket(url, nativeOptions);
+    try {
+      this._ws.binaryType = 'arraybuffer';
+    } catch {}
     this._handshakeTimeout = null;
 
     if (options.handshakeTimeout > 0) {
@@ -80,11 +83,18 @@ class WebSocket {
     });
 
     this._ws.addEventListener('message', event => {
-      const data = normalizeData(event.data);
-      const normalized = { ...event, data, target: this, type: 'message' };
-      Object.defineProperty(normalized, 'data', { value: data, enumerable: true });
-      this._emit('message', data, normalized);
-      if (typeof this.onmessage === 'function') this.onmessage(normalized);
+      const dispatch = raw => {
+        const data = normalizeData(raw);
+        const normalized = { ...event, data, target: this, type: 'message' };
+        Object.defineProperty(normalized, 'data', { value: data, enumerable: true });
+        this._emit('message', data, normalized);
+        if (typeof this.onmessage === 'function') this.onmessage(normalized);
+      };
+      if (typeof Blob !== 'undefined' && event.data instanceof Blob) {
+        event.data.arrayBuffer().then(dispatch, error => this._emit('error', error, event));
+      } else {
+        dispatch(event.data);
+      }
     });
 
     this._ws.addEventListener('error', event => {

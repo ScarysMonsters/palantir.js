@@ -1,0 +1,121 @@
+{
+  "generatedAt": "2026-10-15T11:23:00.493Z",
+  "guildId": "1529166705081974808",
+  "platform": {
+    "os": "win32 10.0.19045",
+    "node": "v26.4.0"
+  },
+  "results": {
+    "palantir": {
+      "pkg": "hipalantir",
+      "version": "10.9.21",
+      "ok": true,
+      "startedAt": "2026-10-15T11:23:00.543Z",
+      "steps": {
+        "loginResolvedMs": 10845.96,
+        "loginToReadyMs": 10845.95,
+        "readyEventFired": true,
+        "wsPingMs": 277,
+        "wsPingAfterMs": 277
+      },
+      "samples": {
+        "guildFetch": {
+          "min": 0.13,
+          "median": 0.13,
+          "mean": 0.13,
+          "max": 0.13,
+          "samples": [
+            0.13
+          ]
+        },
+        "channelsFetch": {
+          "min": 421.38,
+          "median": 421.38,
+          "mean": 421.38,
+          "max": 421.38,
+          "samples": [
+            421.38
+          ]
+        },
+        "send": {
+          "min": 436.03,
+          "median": 624.4,
+          "mean": 651.49,
+          "max": 960.73,
+          "samples": [
+            436.03,
+            547.13,
+            624.4,
+            689.16,
+            960.73
+          ]
+        },
+        "edit": {
+          "min": 509.47,
+          "median": 610.2,
+          "mean": 605.23,
+          "max": 728.34,
+          "samples": [
+            509.47,
+            572.93,
+            610.2,
+            728.34
+          ]
+        },
+        "react": {
+          "min": 365.99,
+          "median": 407.31,
+          "mean": 396.25,
+          "max": 420.78,
+          "samples": [
+            365.99,
+            390.92,
+            407.31,
+            420.78
+          ]
+        },
+        "unreact": {
+          "min": 377.81,
+          "median": 416.06,
+          "mean": 414.12,
+          "max": 459.94,
+          "samples": [
+            377.81,
+            402.66,
+            416.06,
+            459.94
+          ]
+        },
+        "delete": {
+          "min": 379.86,
+          "median": 416.07,
+          "mean": 434.6,
+          "max": 556.55,
+          "samples": [
+            379.86,
+            385.92,
+            416.07,
+            556.55
+          ]
+        }
+      },
+      "errors": [
+        "userFetch: Unauthorized",
+        "messagesFetch: channel.messages.fetch is not a function",
+        "iteration 5: 401: Unauthorized"
+      ],
+      "channelId": "1529166706092675135"
+    },
+    "djs-selfbot-v13": {
+      "pkg": "djs-selfbot-v13",
+      "version": "10.9.20",
+      "ok": false,
+      "startedAt": "2026-10-15T11:23:32.329Z",
+      "steps": {},
+      "samples": {},
+      "errors": [
+        "Error [TOKEN_INVALID]: An invalid token was provided.\n    at WebSocketManager.createShards (C:\\Users\\J\\AppData\\Local\\Temp\\opencode\\bench\\djsselfbot\\node_modules\\djs-selfbot-v13\\src\\client\\websocket\\WebSocketManager.js:252:15)\n    at async Client.login (C:\\Users\\J\\AppData\\Local\\Temp\\opencode\\bench\\djsselfbot\\node_modules\\djs-selfbot-v13\\src\\client\\Client.js:314:7)\n    at async worker (C:\\Users\\J\\Documents\\Projects\\package\\palantir.js\\benchmarks\\network.cjs:84:5)"
+      ]
+    }
+  }
+}

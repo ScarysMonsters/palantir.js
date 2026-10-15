@@ -51,6 +51,7 @@ const Intents = require('./Intents');
  * Options for a client.
  * @typedef {Object} ClientOptions
  * @property {number} [DMChannelVoiceStatusSync=0] The amount of time in milliseconds that the Client to register the event with each DM channel (0=Disable)
+ * @property {boolean} [getLastProperties=true] Fetch the latest Discord client properties (build number, version, user agent) before login, so requests and the gateway identify use credible headers
  * @property {number} [captchaRetryLimit=3] Captcha retry limit
  * @property {CaptchaSolver} [captchaSolver] Captcha Solver
  * @property {string} [TOTPKey] TOTP key / 2FA Key for two-factor authentication
@@ -173,7 +174,7 @@ class Options extends null {
   static createDefault() {
     return {
       device: 'desktop',
-      getLastProperties: false,
+      getLastProperties: true,
       DMChannelVoiceStatusSync: 0,
       captchaRetryLimit: 3,
       captchaSolver: () => {

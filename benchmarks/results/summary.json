@@ -1,0 +1,315 @@
+{
+  "generatedAt": "2026-10-15T11:33:15.016Z",
+  "sources": {
+    "setup": "benchmarks/results/setup.json",
+    "local": "benchmarks/results/local.json",
+    "network": "benchmarks/results/network.json"
+  },
+  "libs": {
+    "palantir": {
+      "displayName": "palantir.js (hipalantir)",
+      "version": "10.9.21"
+    },
+    "djs-selfbot-v13": {
+      "displayName": "djs-selfbot-v13",
+      "version": "10.9.20"
+    }
+  },
+  "package": {
+    "installMs": {
+      "palantir": 10681,
+      "djs-selfbot-v13": 62427,
+      "djsOverPalantir": 5.84
+    },
+    "installedPackages": {
+      "palantir": 4,
+      "djs-selfbot-v13": 208,
+      "djsOverPalantir": 52
+    },
+    "installedFiles": {
+      "palantir": 413,
+      "djs-selfbot-v13": 9154,
+      "djsOverPalantir": 22.16
+    },
+    "nodeModulesBytes": {
+      "palantir": 5294580,
+      "djs-selfbot-v13": 544830401,
+      "djsOverPalantir": 102.9
+    },
+    "unpackedBytes": {
+      "palantir": 2350436,
+      "djs-selfbot-v13": 2255213,
+      "djsOverPalantir": 0.96
+    },
+    "tarballFileCount": {
+      "palantir": 395,
+      "djs-selfbot-v13": 384,
+      "djsOverPalantir": 0.97
+    },
+    "topLevelPackages": {
+      "palantir": [
+        "@snazzah",
+        "hipalantir",
+        "opusscript"
+      ],
+      "djs-selfbot-v13": [
+        "@dank074",
+        "@discordjs",
+        "@fidm",
+        "@img",
+        "@leichtgewicht",
+        "@lng2004",
+        "@minhducsun2002",
+        "@noble",
+        "@otplib",
+        "@peculiar",
+        "@sapphire",
+        "@seydx",
+        "@shinyoshiaki",
+        "@snazzah",
+        "@types",
+        "aes-js",
+        "ansi-regex",
+        "ansi-styles",
+        "asn1js",
+        "async",
+        "asyncc",
+        "atomic-sleep",
+        "base64-js",
+        "bl",
+        "bluebird",
+        "buffer",
+        "camelcase",
+        "chalk",
+        "chownr",
+        "cliui",
+        "cmake-ts",
+        "color-convert",
+        "color-name",
+        "commander",
+        "core-util-is",
+        "debug",
+        "debug-level",
+        "decamelize",
+        "decompress-response",
+        "deep-extend",
+        "detect-libc",
+        "dijkstrajs",
+        "discord-api-types",
+        "discord.js-selfbot-v13",
+        "djs-selfbot-v13",
+        "dns-packet",
+        "duplexer2",
+        "emoji-regex",
+        "end-of-stream",
+        "expand-template",
+        "fast-deep-equal",
+        "fast-safe-stringify",
+        "fetch-cookie",
+        "find-process",
+        "find-up",
+        "flatstr",
+        "fluent-ffmpeg",
+        "fs-constants",
+        "fs-extra",
+        "generate-function",
+        "get-caller-file",
+        "github-from-package",
+        "graceful-fs",
+        "has-flag",
+        "ieee754",
+        "inherits",
+        "ini",
+        "int64-buffer",
+        "ip",
+        "is-fullwidth-code-point",
+        "is-plain-object",
+        "is-property",
+        "isarray",
+        "isexe",
+        "isobject",
+        "jsonfile",
+        "locate-path",
+        "lodash",
+        "loglevel",
+        "map-lru",
+        "mediabunny",
+        "mimic-response",
+        "minimist",
+        "mkdirp-classic",
+        "mp4box",
+        "ms",
+        "multicast-dns",
+        "napi-build-utils",
+        "node-abi",
+        "node-addon-api",
+        "node-av",
+        "node-int64",
+        "once",
+        "otplib",
+        "p-debounce",
+        "p-limit",
+        "p-locate",
+        "p-try",
+        "path-exists",
+        "pngjs",
+        "prebuild-install",
+        "prism-media",
+        "process-nextick-args",
+        "pump",
+        "pvtsutils",
+        "pvutils",
+        "qrcode",
+        "rc",
+        "readable-stream",
+        "reflect-metadata",
+        "require-directory",
+        "require-main-filename",
+        "safe-buffer",
+        "semver",
+        "set-blocking",
+        "set-cookie-parser",
+        "sharp",
+        "simple-concat",
+        "simple-get",
+        "sonic-boom",
+        "string-width",
+        "string_decoder",
+        "strip-ansi",
+        "strip-json-comments",
+        "supports-color",
+        "tar-fs",
+        "tar-stream",
+        "thirty-two",
+        "thunky",
+        "tldts",
+        "tldts-core",
+        "tough-cookie",
+        "tree-kill",
+        "ts-mixer",
+        "tslib",
+        "tsyringe",
+        "tunnel-agent",
+        "tweetnacl",
+        "undici",
+        "universalify",
+        "unzipper",
+        "util-deprecate",
+        "werift",
+        "werift-common",
+        "werift-dtls",
+        "werift-ice",
+        "werift-rtp",
+        "werift-sctp",
+        "which",
+        "which-module",
+        "wrap-ansi",
+        "wrappy",
+        "ws",
+        "y18n",
+        "yargs",
+        "yargs-parser",
+        "zeromq"
+      ]
+    }
+  },
+  "runtime": {
+    "coldRequireMsNode": {
+      "palantir": 9.77,
+      "djs-selfbot-v13": 678.97,
+      "djsOverPalantir": 69.52
+    },
+    "coldRequireMsBun": {
+      "palantir": 22.39,
+      "djs-selfbot-v13": 406.81,
+      "djsOverPalantir": 18.17
+    },
+    "memoryRssMBAfterRequireNode": {
+      "palantir": 57.79,
+      "djs-selfbot-v13": 95.7,
+      "djsOverPalantir": 1.66
+    },
+    "instantiateMsNode": {
+      "palantir": 0.58,
+      "djs-selfbot-v13": 1.04,
+      "djsOverPalantir": 1.8
+    },
+    "instantiateMsBun": {
+      "palantir": 2.67,
+      "djs-selfbot-v13": 2.64,
+      "djsOverPalantir": 0.99
+    }
+  },
+  "network": {
+    "guildId": "1529166705081974808",
+    "ok": {
+      "palantir": true,
+      "djs-selfbot-v13": false
+    },
+    "loginToReadyMs": {
+      "palantir": 10845.95,
+      "djs-selfbot-v13": null,
+      "djsOverPalantir": null
+    },
+    "wsPingMs": {
+      "palantir": 277,
+      "djs-selfbot-v13": null,
+      "djsOverPalantir": null
+    },
+    "errors": {
+      "palantir": [
+        "userFetch: Unauthorized",
+        "messagesFetch: channel.messages.fetch is not a function",
+        "iteration 5: 401: Unauthorized"
+      ],
+      "djs-selfbot-v13": [
+        "Error [TOKEN_INVALID]: An invalid token was provided.\n    at WebSocketManager.createShards (C:\\Users\\J\\AppData\\Local\\Temp\\opencode\\bench\\djsselfbot\\node_modules\\djs-selfbot-v13\\src\\client\\websocket\\WebSocketManager.js:252:15)\n    at async Client.login (C:\\Users\\J\\AppData\\Local\\Temp\\opencode\\bench\\djsselfbot\\node_modules\\djs-selfbot-v13\\src\\client\\Client.js:314:7)\n    at async worker (C:\\Users\\J\\Documents\\Projects\\package\\palantir.js\\benchmarks\\network.cjs:84:5)"
+      ]
+    },
+    "guildFetch": {
+      "palantir": 0.13,
+      "djs-selfbot-v13": null,
+      "djsOverPalantir": null
+    },
+    "channelsFetch": {
+      "palantir": 421.38,
+      "djs-selfbot-v13": null,
+      "djsOverPalantir": null
+    },
+    "userFetch": {
+      "palantir": null,
+      "djs-selfbot-v13": null,
+      "djsOverPalantir": null
+    },
+    "messagesFetch": {
+      "palantir": null,
+      "djs-selfbot-v13": null,
+      "djsOverPalantir": null
+    },
+    "send": {
+      "palantir": 624.4,
+      "djs-selfbot-v13": null,
+      "djsOverPalantir": null
+    },
+    "edit": {
+      "palantir": 610.2,
+      "djs-selfbot-v13": null,
+      "djsOverPalantir": null
+    },
+    "react": {
+      "palantir": 407.31,
+      "djs-selfbot-v13": null,
+      "djsOverPalantir": null
+    },
+    "unreact": {
+      "palantir": 416.06,
+      "djs-selfbot-v13": null,
+      "djsOverPalantir": null
+    },
+    "delete": {
+      "palantir": 416.07,
+      "djs-selfbot-v13": null,
+      "djsOverPalantir": null
+    }
+  }
+}
