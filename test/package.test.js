@@ -20,10 +20,10 @@ describe('package integrity', () => {
     expect(optional.filter(name => name.startsWith('@snazzah/davey-')).length).toBeGreaterThanOrEqual(3);
   });
 
-  test('default options enable gateway compression', () => {
+  test('default options leave gateway compression disabled (matches djs-selfbot-v13)', () => {
     const Options = require('../src/util/Options.js');
     const options = Options.createDefault();
-    expect(options.ws.compress).toBe(true);
+    expect(options.ws.compress).toBe(false);
   });
 
   test('index.js loads lazily and fast', () => {

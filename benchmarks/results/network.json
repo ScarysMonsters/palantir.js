@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T11:48:14.319Z",
+  "generatedAt": "2026-10-15T12:46:46.381Z",
   "guildId": "1529166705081974808",
   "platform": {
     "os": "win32 10.0.19045",
@@ -10,7 +10,7 @@
       "pkg": "hipalantir",
       "version": "10.9.21",
       "ok": true,
-      "startedAt": "2026-10-15T11:48:14.424Z",
+      "startedAt": "2026-10-15T12:46:46.481Z",
       "notes": [
         "getLastProperties: true",
         "Options.fetchClientProperties() pre-fetched",
@@ -18,41 +18,70 @@
       ],
       "propertiesFetched": true,
       "steps": {
-        "loginResolvedMs": 1142.57,
-        "loginToReadyMs": 1142.57,
+        "loginResolvedMs": 1700.14,
+        "loginToReadyMs": 1700.11,
         "readyEventFired": true,
-        "wsPingMs": 278,
-        "wsPingAfterMs": 278
+        "wsPingMs": 294,
+        "wsPingAfterMs": 294
       },
       "samples": {
         "guildFetch": {
-          "min": 0.28,
-          "median": 0.28,
-          "mean": 0.28,
-          "max": 0.28,
+          "min": 0.39,
+          "median": 0.39,
+          "mean": 0.39,
+          "max": 0.39,
           "samples": [
-            0.28
+            0.39
           ]
         },
         "channelsFetch": {
-          "min": 487.2,
-          "median": 487.2,
-          "mean": 487.2,
-          "max": 487.2,
+          "min": 459.35,
+          "median": 459.35,
+          "mean": 459.35,
+          "max": 459.35,
           "samples": [
-            487.2
+            459.35
           ]
         },
         "messagesFetch": {
-          "min": 438.73,
-          "median": 438.73,
-          "mean": 438.73,
-          "max": 438.73,
+          "min": 485.75,
+          "median": 485.75,
+          "mean": 485.75,
+          "max": 485.75,
           "samples": [
-            438.73
+            485.75
           ]
         }
       },
+      "debugLog": [
+        "Logging on with a user token is unfortunately against the Discord `Terms of Service` <https://support.discord.com/hc/en-us/articles/115002192352> and doing so might potentially get your account banned. Use this at your own risk.",
+        "Provided token: <redacted-token>",
+        "Preparing to connect to the gateway...",
+        "[WS => Manager] Fetched Gateway Information URL: wss://gateway.discord.gg Recommended Shards: 1",
+        "[WS => Manager] Session Limit Information Total: Infinity Remaining: Infinity",
+        "[WS => Manager] Spawning shards: 0",
+        "[WS => Shard 0] [CONNECT] Gateway : wss://gateway.discord.gg/ Version : 9 Encoding : json Compression: none Agent : false",
+        "[WS => Shard 0] Setting a HELLO timeout for 20s.",
+        "[WS => Shard 0] [CONNECTED] Took 507ms",
+        "[WS => Shard 0] Clearing the HELLO timeout.",
+        "[WS => Shard 0] Setting a heartbeat interval for 41250ms.",
+        "[WS => Shard 0] [IDENTIFY] Shard 0",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":2,\"d\":{\"capabilities\":0,\"properties\":{\"os\":\"Linux\",\"browser\":\"Discord Client\",\"release_channel\":\"stable\",\"client_version\":\"1.0.9261\",\"os_version\":\"10\",\"os_arch\":\"x64\",\"app_arch\":\"x64\",\"system_locale\":\"en-US\",\"has_client_mods\":false,\"browser_user_agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9261 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36\",\"browser_version\":\"138.0.7204.251\",\"os_sdk_version\":\"19045\",\"client_build_number\":637268,\"native_build_number\":93252,\"client_event_source\":null,\"client_app_state\":\"focused\",\"client_launch_id\":\"53938b50-8609-40bc-8ed7-b3e8097088cb\",\"launch_signature\":\"640fb2f3-c685-4255-b080-f1be59b82d8c\",\"client_heartbeat_session_id\":\"f50f4840-dc9c-4482-8185-b684c2cb3708\",\"device\":\"Discord Client\",\"is_fast_connect\":false,\"gateway_connect_reasons\":\"AppSkeleton\"},\"compress\":false,\"client_state\":{\"guild_versions\":{}},\"presence\":{\"activities\":[],\"afk\":true,\"since\":0,\"status\":\"online\"},\"token\":\"<redacted-token>\"}}'",
+        "[WS => Shard 0] [READY] Session 45c0a55430ec6385a807c98613d6f15b | Resume url wss://gateway-us-east1-b.discord.gg.",
+        "[WS => Shard 0] [ReadyHeartbeat] Sending a heartbeat.",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":1,\"d\":null}'",
+        "[USER_REQUIRED_ACTION] All required actions have been completed.",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":3,\"d\":{\"activities\":[],\"afk\":true,\"since\":0,\"status\":\"online\"}}'",
+        "[SETTING > ClientUser] Sync setting",
+        "[SETTING > ClientUser] Sync activities & status",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":3,\"d\":{\"activities\":[],\"afk\":true,\"since\":0,\"status\":\"online\"}}'",
+        "[SETTING > Guild 321845546534830085] Sync setting",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":37,\"d\":{\"subscriptions\":{\"321845546534830085\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1390023740410171493\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1528565659347193976\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1529166705081974808\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}}}}}'",
+        "[WS => Shard 0] Shard received all its guilds. Marking as fully ready.",
+        "[WS => Shard 0] Heartbeat acknowledged, latency of 294ms.",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":37,\"d\":{\"subscriptions\":{\"1390023740410171493\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}}}}}'",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":37,\"d\":{\"subscriptions\":{\"321845546534830085\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}}}}}'"
+      ],
       "errors": [
         "iteration 1: Access to sending messages in server channels has been limited for the user",
         "iteration 2: Access to sending messages in server channels has been limited for the user",
@@ -64,7 +93,7 @@
       "pkg": "djs-selfbot-v13",
       "version": "10.9.20",
       "ok": true,
-      "startedAt": "2026-10-15T11:48:40.927Z",
+      "startedAt": "2026-10-15T12:45:10.074Z",
       "notes": [
         "getLastProperties: true",
         "Options.fetchClientProperties() pre-fetched",
@@ -72,11 +101,11 @@
       ],
       "propertiesFetched": true,
       "steps": {
-        "loginResolvedMs": 1724.5,
-        "loginToReadyMs": 1724.49,
+        "loginResolvedMs": 3278.22,
+        "loginToReadyMs": 3278.21,
         "readyEventFired": true,
-        "wsPingMs": 275,
-        "wsPingAfterMs": 275
+        "wsPingMs": 276,
+        "wsPingAfterMs": 276
       },
       "samples": {
         "guildFetch": {
@@ -89,24 +118,53 @@
           ]
         },
         "channelsFetch": {
-          "min": 497.53,
-          "median": 497.53,
-          "mean": 497.53,
-          "max": 497.53,
+          "min": 394.58,
+          "median": 394.58,
+          "mean": 394.58,
+          "max": 394.58,
           "samples": [
-            497.53
+            394.58
           ]
         },
         "messagesFetch": {
-          "min": 696.33,
-          "median": 696.33,
-          "mean": 696.33,
-          "max": 696.33,
+          "min": 405.25,
+          "median": 405.25,
+          "mean": 405.25,
+          "max": 405.25,
           "samples": [
-            696.33
+            405.25
           ]
         }
       },
+      "debugLog": [
+        "Logging on with a user token is unfortunately against the Discord `Terms of Service` <https://support.discord.com/hc/en-us/articles/115002192352> and doing so might potentially get your account banned. Use this at your own risk.",
+        "Provided token: <redacted-token>",
+        "Preparing to connect to the gateway...",
+        "[WS => Manager] Fetched Gateway Information URL: wss://gateway.discord.gg Recommended Shards: 1",
+        "[WS => Manager] Session Limit Information Total: Infinity Remaining: Infinity",
+        "[WS => Manager] Spawning shards: 0",
+        "[WS => Shard 0] [CONNECT] Gateway : wss://gateway.discord.gg/ Version : 9 Encoding : json Compression: none Agent : false",
+        "[WS => Shard 0] Setting a HELLO timeout for 20s.",
+        "[WS => Shard 0] [CONNECTED] Took 391ms",
+        "[WS => Shard 0] Clearing the HELLO timeout.",
+        "[WS => Shard 0] Setting a heartbeat interval for 41250ms.",
+        "[WS => Shard 0] [IDENTIFY] Shard 0",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":2,\"d\":{\"capabilities\":0,\"properties\":{\"os\":\"Linux\",\"browser\":\"Discord Client\",\"release_channel\":\"stable\",\"client_version\":\"1.0.9261\",\"os_version\":\"10\",\"os_arch\":\"x64\",\"app_arch\":\"x64\",\"system_locale\":\"en-US\",\"has_client_mods\":false,\"browser_user_agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9261 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36\",\"browser_version\":\"138.0.7204.251\",\"os_sdk_version\":\"19045\",\"client_build_number\":637268,\"native_build_number\":93252,\"client_event_source\":null,\"client_app_state\":\"focused\",\"client_launch_id\":\"9e5493b5-07ec-4d18-b166-38406f0eefbf\",\"launch_signature\":\"b5075e6d-2ece-463a-86dd-36ec57812b4f\",\"client_heartbeat_session_id\":\"0ee4f3a4-5939-48c7-932f-6a28479ff8f7\",\"device\":\"Discord Client\",\"is_fast_connect\":false,\"gateway_connect_reasons\":\"AppSkeleton\"},\"compress\":false,\"client_state\":{\"guild_versions\":{}},\"presence\":{\"activities\":[],\"afk\":true,\"since\":0,\"status\":\"online\"},\"token\":\"<redacted-token>\"}}'",
+        "[WS => Shard 0] [READY] Session fd9c25453f6569f8c3cf4934becc372a | Resume url wss://gateway-us-east1-d.discord.gg.",
+        "[WS => Shard 0] [ReadyHeartbeat] Sending a heartbeat.",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":1,\"d\":null}'",
+        "[USER_REQUIRED_ACTION] All required actions have been completed.",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":3,\"d\":{\"activities\":[],\"afk\":true,\"since\":0,\"status\":\"online\"}}'",
+        "[SETTING > ClientUser] Sync setting",
+        "[SETTING > ClientUser] Sync activities & status",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":3,\"d\":{\"activities\":[],\"afk\":true,\"since\":0,\"status\":\"online\"}}'",
+        "[SETTING > Guild 321845546534830085] Sync setting",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":37,\"d\":{\"subscriptions\":{\"321845546534830085\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1390023740410171493\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1528565659347193976\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1529166705081974808\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}}}}}'",
+        "[WS => Shard 0] Shard received all its guilds. Marking as fully ready.",
+        "[WS => Shard 0] Heartbeat acknowledged, latency of 276ms.",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":37,\"d\":{\"subscriptions\":{\"1390023740410171493\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}}}}}'",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":37,\"d\":{\"subscriptions\":{\"321845546534830085\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}}}}}'"
+      ],
       "errors": [
         "iteration 1: Access to sending messages in server channels has been limited for the user",
         "iteration 2: Access to sending messages in server channels has been limited for the user",

@@ -38,6 +38,7 @@ async function worker() {
     propertiesFetched: null,
     steps: {},
     samples: {},
+    debugLog: [],
     errors: [],
   };
   let client;
@@ -79,6 +80,17 @@ async function worker() {
 
     const { Client } = lib;
     client = new Client({ getLastProperties: true });
+
+    client.on('debug', message => {
+      if (out.debugLog.length < 400) {
+        out.debugLog.push(
+          String(message)
+            .replace(/[\w-]{15,}\.[\w-]{5,8}\.[\w*-]{20,}/g, '<redacted-token>')
+            .replace(/\s+/g, ' ')
+            .trim(),
+        );
+      }
+    });
 
     const timed = async (label, fn) => {
       const t0 = performance.now();
@@ -152,6 +164,7 @@ async function worker() {
 function driver() {
   const guild = getArg('guild');
   const outPath = getArg('out') || path.join(resultsDir, 'network.json');
+  const only = getArg('only');
   if (!guild) {
     console.error('--guild <id> is required');
     process.exit(1);
@@ -169,7 +182,14 @@ function driver() {
     results: {},
   };
 
+  if (only && fs.existsSync(outPath)) {
+    try {
+      merged.results = JSON.parse(fs.readFileSync(outPath, 'utf8')).results || {};
+    } catch {}
+  }
+
   for (const [key, lib] of Object.entries(setup.libs)) {
+    if (only && key !== only) continue;
     console.log(`running network benchmark: ${key}...`);
     const tmp = path.join(resultsDir, `network-${key}.tmp.json`);
     fs.rmSync(tmp, { force: true });

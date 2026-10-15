@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T11:49:31.262Z",
+  "generatedAt": "2026-10-15T12:48:31.688Z",
   "sources": {
     "setup": "benchmarks/results/setup.json",
     "local": "benchmarks/results/local.json",
@@ -247,14 +247,14 @@
       "djs-selfbot-v13": true
     },
     "loginToReadyMs": {
-      "palantir": 1142.57,
-      "djs-selfbot-v13": 1724.49,
-      "djsOverPalantir": 1.51
+      "palantir": 1700.11,
+      "djs-selfbot-v13": 3278.21,
+      "djsOverPalantir": 1.93
     },
     "wsPingMs": {
-      "palantir": 278,
-      "djs-selfbot-v13": 275,
-      "djsOverPalantir": 0.99
+      "palantir": 294,
+      "djs-selfbot-v13": 276,
+      "djsOverPalantir": 0.94
     },
     "errors": {
       "palantir": [
@@ -269,14 +269,14 @@
       ]
     },
     "guildFetch": {
-      "palantir": 0.28,
+      "palantir": 0.39,
       "djs-selfbot-v13": 0.22,
-      "djsOverPalantir": 0.79
+      "djsOverPalantir": 0.56
     },
     "channelsFetch": {
-      "palantir": 487.2,
-      "djs-selfbot-v13": 497.53,
-      "djsOverPalantir": 1.02
+      "palantir": 459.35,
+      "djs-selfbot-v13": 394.58,
+      "djsOverPalantir": 0.86
     },
     "userFetch": {
       "palantir": null,
@@ -284,9 +284,9 @@
       "djsOverPalantir": null
     },
     "messagesFetch": {
-      "palantir": 438.73,
-      "djs-selfbot-v13": 696.33,
-      "djsOverPalantir": 1.59
+      "palantir": 485.75,
+      "djs-selfbot-v13": 405.25,
+      "djsOverPalantir": 0.83
     },
     "send": {
       "palantir": null,
