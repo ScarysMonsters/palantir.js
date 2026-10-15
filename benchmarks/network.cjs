@@ -13,6 +13,7 @@ const getArg = (name) => {
   return i === -1 ? undefined : argv[i + 1];
 };
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleepSync = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 const r2 = (x) => +x.toFixed(2);
 
 const stats = (samples) => {
@@ -165,6 +166,7 @@ function driver() {
   const guild = getArg('guild');
   const outPath = getArg('out') || path.join(resultsDir, 'network.json');
   const only = getArg('only');
+  const gapSec = Number(getArg('gap') ?? 30);
   if (!guild) {
     console.error('--guild <id> is required');
     process.exit(1);
@@ -188,8 +190,13 @@ function driver() {
     } catch {}
   }
 
-  for (const [key, lib] of Object.entries(setup.libs)) {
-    if (only && key !== only) continue;
+  const entries = Object.entries(setup.libs).filter(([key]) => !only || key === only);
+  for (let i = 0; i < entries.length; i++) {
+    const [key, lib] = entries[i];
+    if (i > 0 && gapSec > 0) {
+      console.log(`cooling down ${gapSec}s before next session...`);
+      sleepSync(gapSec * 1000);
+    }
     console.log(`running network benchmark: ${key}...`);
     const tmp = path.join(resultsDir, `network-${key}.tmp.json`);
     fs.rmSync(tmp, { force: true });

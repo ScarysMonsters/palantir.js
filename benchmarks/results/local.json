@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T11:32:45.717Z",
+  "generatedAt": "2026-10-15T12:59:09.966Z",
   "platform": {
     "os": "win32 10.0.19045 x64",
     "cpu": "Intel(R) Core(TM) i5-10210U CPU @ 1.60GHz",
@@ -13,73 +13,73 @@
       "dir": "C:\\Users\\J\\AppData\\Local\\Temp\\opencode\\bench\\palantir",
       "pkg": "hipalantir",
       "entry": "C:\\Users\\J\\AppData\\Local\\Temp\\opencode\\bench\\palantir\\node_modules\\hipalantir\\src\\index.js",
-      "version": "10.9.21",
+      "version": "10.9.22",
       "coldRequireMs": {
         "node": {
-          "min": 8.725,
-          "median": 9.766,
-          "mean": 9.803,
-          "max": 11.84,
+          "min": 13.364,
+          "median": 15.893,
+          "mean": 16.291,
+          "max": 20.586,
           "samples": [
-            8.725,
-            9.032,
-            9.277,
-            9.766,
-            10.177,
-            11.84
+            13.364,
+            13.756,
+            14.468,
+            15.893,
+            19.68,
+            20.586
           ]
         },
         "bun": {
-          "min": 21.478,
-          "median": 22.385,
-          "mean": 22.32,
-          "max": 23.372,
+          "min": 34.861,
+          "median": 64.995,
+          "mean": 54.934,
+          "max": 66.919,
           "samples": [
-            21.478,
-            22.061,
-            22.186,
-            22.385,
-            22.438,
-            23.372
+            34.861,
+            46.552,
+            49.75,
+            64.995,
+            66.525,
+            66.919
           ]
         }
       },
       "memoryAfterRequire": {
         "node": [
           {
-            "rss": 60596224,
-            "heapUsed": 4481464,
-            "heapTotal": 6164480,
-            "external": 1683622
-          },
-          {
-            "rss": 60604416,
-            "heapUsed": 4481464,
-            "heapTotal": 6164480,
-            "external": 1683622
-          },
-          {
-            "rss": 60645376,
-            "heapUsed": 4481464,
+            "rss": 59756544,
+            "heapUsed": 4481600,
             "heapTotal": 5640192,
+            "external": 1683622
+          },
+          {
+            "rss": 59703296,
+            "heapUsed": 4481600,
+            "heapTotal": 5902336,
+            "external": 1683622
+          },
+          {
+            "rss": 59740160,
+            "heapUsed": 4481600,
+            "heapTotal": 6164480,
             "external": 1683622
           }
         ],
         "bun": [
           {
-            "rss": 49532928,
+            "rss": 49590272,
             "heapUsed": 182301,
             "heapTotal": 809984,
             "external": 12525
           },
           {
-            "rss": 49491968,
+            "rss": 49733632,
             "heapUsed": 182301,
             "heapTotal": 809984,
             "external": 12525
           },
           {
-            "rss": 50601984,
+            "rss": 49586176,
             "heapUsed": 182301,
             "heapTotal": 809984,
             "external": 12525
@@ -88,40 +88,40 @@
       },
       "instantiate100Ms": {
         "node": {
-          "min": 52.27,
-          "median": 57.603,
-          "mean": 62.399,
-          "max": 77.325,
+          "min": 97.149,
+          "median": 151.613,
+          "mean": 147.633,
+          "max": 194.137,
           "samples": [
-            52.27,
-            57.603,
-            77.325
+            97.149,
+            151.613,
+            194.137
           ]
         },
         "bun": {
-          "min": 262.27,
-          "median": 267.117,
-          "mean": 266.419,
-          "max": 269.87,
+          "min": 456.41,
+          "median": 631.39,
+          "mean": 598.382,
+          "max": 707.346,
           "samples": [
-            262.27,
-            267.117,
-            269.87
+            456.41,
+            631.39,
+            707.346
           ]
         }
       },
       "instantiateMs": {
         "node": {
-          "min": 0.5227,
-          "median": 0.576,
-          "mean": 0.624,
-          "max": 0.7732
+          "min": 0.9715,
+          "median": 1.5161,
+          "mean": 1.4763,
+          "max": 1.9414
         },
         "bun": {
-          "min": 2.6227,
-          "median": 2.6712,
-          "mean": 2.6642,
-          "max": 2.6987
+          "min": 4.5641,
+          "median": 6.3139,
+          "mean": 5.9838,
+          "max": 7.0735
         }
       },
       "errors": []
@@ -133,70 +133,70 @@
       "version": "10.9.20",
       "coldRequireMs": {
         "node": {
-          "min": 654.023,
-          "median": 678.973,
-          "mean": 679.455,
-          "max": 709.193,
+          "min": 1209.644,
+          "median": 1395.61,
+          "mean": 1405.187,
+          "max": 1724.277,
           "samples": [
-            654.023,
-            667.247,
-            674.846,
-            678.973,
-            692.446,
-            709.193
+            1209.644,
+            1268.115,
+            1273.955,
+            1395.61,
+            1559.518,
+            1724.277
           ]
         },
         "bun": {
-          "min": 392.024,
-          "median": 406.805,
-          "mean": 420.6,
-          "max": 509.692,
+          "min": 812.997,
+          "median": 867.412,
+          "mean": 872.858,
+          "max": 963.134,
           "samples": [
-            392.024,
-            397.898,
-            406.108,
-            406.805,
-            411.075,
-            509.692
+            812.997,
+            822.885,
+            838.217,
+            867.412,
+            932.505,
+            963.134
           ]
         }
       },
       "memoryAfterRequire": {
         "node": [
           {
-            "rss": 100343808,
-            "heapUsed": 22715664,
-            "heapTotal": 40017920,
+            "rss": 100466688,
+            "heapUsed": 26115624,
+            "heapTotal": 39755776,
             "external": 4308619
           },
           {
-            "rss": 100065280,
-            "heapUsed": 22816720,
-            "heapTotal": 38707200,
+            "rss": 100347904,
+            "heapUsed": 22769856,
+            "heapTotal": 39231488,
             "external": 4308619
           },
           {
-            "rss": 99864576,
-            "heapUsed": 22674280,
-            "heapTotal": 39493632,
+            "rss": 100220928,
+            "heapUsed": 22789240,
+            "heapTotal": 38969344,
             "external": 4308619
           }
         ],
         "bun": [
           {
-            "rss": 88227840,
+            "rss": 87977984,
             "heapUsed": 182301,
             "heapTotal": 9424896,
             "external": 50726
           },
           {
-            "rss": 88043520,
+            "rss": 87461888,
             "heapUsed": 182301,
             "heapTotal": 9424896,
             "external": 50726
           },
           {
-            "rss": 87916544,
+            "rss": 88047616,
             "heapUsed": 182301,
             "heapTotal": 9424896,
             "external": 50726
@@ -205,40 +205,40 @@
       },
       "instantiate100Ms": {
         "node": {
-          "min": 95.361,
-          "median": 103.533,
-          "mean": 112.526,
-          "max": 138.685,
+          "min": 219.814,
+          "median": 238.679,
+          "mean": 240.628,
+          "max": 263.393,
           "samples": [
-            95.361,
-            103.533,
-            138.685
+            219.814,
+            238.679,
+            263.393
           ]
         },
         "bun": {
-          "min": 262.95,
-          "median": 264.132,
-          "mean": 270.046,
-          "max": 283.055,
+          "min": 541.696,
+          "median": 543.69,
+          "mean": 595.225,
+          "max": 700.287,
           "samples": [
-            262.95,
-            264.132,
-            283.055
+            541.696,
+            543.69,
+            700.287
           ]
         }
       },
       "instantiateMs": {
         "node": {
-          "min": 0.9536,
-          "median": 1.0353,
-          "mean": 1.1253,
-          "max": 1.3868
+          "min": 2.1981,
+          "median": 2.3868,
+          "mean": 2.4063,
+          "max": 2.6339
         },
         "bun": {
-          "min": 2.6295,
-          "median": 2.6413,
-          "mean": 2.7005,
-          "max": 2.8306
+          "min": 5.417,
+          "median": 5.4369,
+          "mean": 5.9523,
+          "max": 7.0029
         }
       },
       "errors": []

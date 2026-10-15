@@ -1,24 +1,24 @@
 {
-  "generatedAt": "2026-10-15T11:32:40.115Z",
+  "generatedAt": "2026-10-15T12:58:59.155Z",
   "benchRoot": "C:/Users/J/AppData/Local/Temp/opencode/bench",
   "libs": {
     "palantir": {
       "displayName": "palantir.js (hipalantir)",
       "pkg": "hipalantir",
       "dir": "C:\\Users\\J\\AppData\\Local\\Temp\\opencode\\bench\\palantir",
-      "installCommand": "npm install hipalantir-10.9.21.tgz",
-      "installMs": 10681,
+      "installCommand": "npm install hipalantir-10.9.22.tgz",
+      "installMs": 15257,
       "tarball": {
-        "filename": "hipalantir-10.9.21.tgz",
-        "bytes": 513957,
-        "unpackedBytes": 2350436,
+        "filename": "hipalantir-10.9.22.tgz",
+        "bytes": 513921,
+        "unpackedBytes": 2351425,
         "fileCount": 395
       },
-      "version": "10.9.21",
+      "version": "10.9.22",
       "installDir": "C:\\Users\\J\\AppData\\Local\\Temp\\opencode\\bench\\palantir",
       "nodeModules": {
         "files": 413,
-        "bytes": 5294580,
+        "bytes": 5295569,
         "packages": 4,
         "topLevel": [
           "@snazzah",
@@ -32,7 +32,7 @@
       "pkg": "djs-selfbot-v13",
       "dir": "C:\\Users\\J\\AppData\\Local\\Temp\\opencode\\bench\\djsselfbot",
       "installCommand": "npm install djs-selfbot-v13@10.9.20",
-      "installMs": 62427,
+      "installMs": 89555,
       "tarball": {
         "filename": "djs-selfbot-v13-10.9.20.tgz",
         "bytes": null,

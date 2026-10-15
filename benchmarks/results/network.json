@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T12:46:46.381Z",
+  "generatedAt": "2026-10-15T13:00:04.209Z",
   "guildId": "1529166705081974808",
   "platform": {
     "os": "win32 10.0.19045",
@@ -8,9 +8,9 @@
   "results": {
     "palantir": {
       "pkg": "hipalantir",
-      "version": "10.9.21",
+      "version": "10.9.22",
       "ok": true,
-      "startedAt": "2026-10-15T12:46:46.481Z",
+      "startedAt": "2026-10-15T13:00:04.387Z",
       "notes": [
         "getLastProperties: true",
         "Options.fetchClientProperties() pre-fetched",
@@ -18,38 +18,38 @@
       ],
       "propertiesFetched": true,
       "steps": {
-        "loginResolvedMs": 1700.14,
-        "loginToReadyMs": 1700.11,
+        "loginResolvedMs": 2019.95,
+        "loginToReadyMs": 2019.94,
         "readyEventFired": true,
-        "wsPingMs": 294,
-        "wsPingAfterMs": 294
+        "wsPingMs": 273,
+        "wsPingAfterMs": 273
       },
       "samples": {
         "guildFetch": {
-          "min": 0.39,
-          "median": 0.39,
-          "mean": 0.39,
-          "max": 0.39,
+          "min": 0.22,
+          "median": 0.22,
+          "mean": 0.22,
+          "max": 0.22,
           "samples": [
-            0.39
+            0.22
           ]
         },
         "channelsFetch": {
-          "min": 459.35,
-          "median": 459.35,
-          "mean": 459.35,
-          "max": 459.35,
+          "min": 925.35,
+          "median": 925.35,
+          "mean": 925.35,
+          "max": 925.35,
           "samples": [
-            459.35
+            925.35
           ]
         },
         "messagesFetch": {
-          "min": 485.75,
-          "median": 485.75,
-          "mean": 485.75,
-          "max": 485.75,
+          "min": 505.11,
+          "median": 505.11,
+          "mean": 505.11,
+          "max": 505.11,
           "samples": [
-            485.75
+            505.11
           ]
         }
       },
@@ -62,12 +62,12 @@
         "[WS => Manager] Spawning shards: 0",
         "[WS => Shard 0] [CONNECT] Gateway : wss://gateway.discord.gg/ Version : 9 Encoding : json Compression: none Agent : false",
         "[WS => Shard 0] Setting a HELLO timeout for 20s.",
-        "[WS => Shard 0] [CONNECTED] Took 507ms",
+        "[WS => Shard 0] [CONNECTED] Took 523ms",
         "[WS => Shard 0] Clearing the HELLO timeout.",
         "[WS => Shard 0] Setting a heartbeat interval for 41250ms.",
         "[WS => Shard 0] [IDENTIFY] Shard 0",
-        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":2,\"d\":{\"capabilities\":0,\"properties\":{\"os\":\"Linux\",\"browser\":\"Discord Client\",\"release_channel\":\"stable\",\"client_version\":\"1.0.9261\",\"os_version\":\"10\",\"os_arch\":\"x64\",\"app_arch\":\"x64\",\"system_locale\":\"en-US\",\"has_client_mods\":false,\"browser_user_agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9261 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36\",\"browser_version\":\"138.0.7204.251\",\"os_sdk_version\":\"19045\",\"client_build_number\":637268,\"native_build_number\":93252,\"client_event_source\":null,\"client_app_state\":\"focused\",\"client_launch_id\":\"53938b50-8609-40bc-8ed7-b3e8097088cb\",\"launch_signature\":\"640fb2f3-c685-4255-b080-f1be59b82d8c\",\"client_heartbeat_session_id\":\"f50f4840-dc9c-4482-8185-b684c2cb3708\",\"device\":\"Discord Client\",\"is_fast_connect\":false,\"gateway_connect_reasons\":\"AppSkeleton\"},\"compress\":false,\"client_state\":{\"guild_versions\":{}},\"presence\":{\"activities\":[],\"afk\":true,\"since\":0,\"status\":\"online\"},\"token\":\"<redacted-token>\"}}'",
-        "[WS => Shard 0] [READY] Session 45c0a55430ec6385a807c98613d6f15b | Resume url wss://gateway-us-east1-b.discord.gg.",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":2,\"d\":{\"capabilities\":0,\"properties\":{\"os\":\"Linux\",\"browser\":\"Discord Client\",\"release_channel\":\"stable\",\"client_version\":\"1.0.9262\",\"os_version\":\"10\",\"os_arch\":\"x64\",\"app_arch\":\"x64\",\"system_locale\":\"en-US\",\"has_client_mods\":false,\"browser_user_agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9262 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36\",\"browser_version\":\"138.0.7204.251\",\"os_sdk_version\":\"19045\",\"client_build_number\":637268,\"native_build_number\":94186,\"client_event_source\":null,\"client_app_state\":\"focused\",\"client_launch_id\":\"3dedb4aa-61da-437f-b606-7a0e1c1c4176\",\"launch_signature\":\"1ef45f97-7b29-4532-bd1d-80a86688d138\",\"client_heartbeat_session_id\":\"0e4d89a8-39c7-4702-9cda-228edd76292b\",\"device\":\"Discord Client\",\"is_fast_connect\":false,\"gateway_connect_reasons\":\"AppSkeleton\"},\"compress\":false,\"client_state\":{\"guild_versions\":{}},\"presence\":{\"activities\":[],\"afk\":true,\"since\":0,\"status\":\"online\"},\"token\":\"<redacted-token>\"}}'",
+        "[WS => Shard 0] [READY] Session df5d45023fa84ba5a530331c4df511e0 | Resume url wss://gateway-us-east1-c.discord.gg.",
         "[WS => Shard 0] [ReadyHeartbeat] Sending a heartbeat.",
         "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":1,\"d\":null}'",
         "[USER_REQUIRED_ACTION] All required actions have been completed.",
@@ -78,7 +78,7 @@
         "[SETTING > Guild 321845546534830085] Sync setting",
         "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":37,\"d\":{\"subscriptions\":{\"321845546534830085\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1390023740410171493\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1528565659347193976\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1529166705081974808\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}}}}}'",
         "[WS => Shard 0] Shard received all its guilds. Marking as fully ready.",
-        "[WS => Shard 0] Heartbeat acknowledged, latency of 294ms.",
+        "[WS => Shard 0] Heartbeat acknowledged, latency of 273ms.",
         "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":37,\"d\":{\"subscriptions\":{\"1390023740410171493\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}}}}}'",
         "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":37,\"d\":{\"subscriptions\":{\"321845546534830085\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}}}}}'"
       ],
@@ -93,7 +93,7 @@
       "pkg": "djs-selfbot-v13",
       "version": "10.9.20",
       "ok": true,
-      "startedAt": "2026-10-15T12:45:10.074Z",
+      "startedAt": "2026-10-15T13:01:03.823Z",
       "notes": [
         "getLastProperties: true",
         "Options.fetchClientProperties() pre-fetched",
@@ -101,38 +101,38 @@
       ],
       "propertiesFetched": true,
       "steps": {
-        "loginResolvedMs": 3278.22,
-        "loginToReadyMs": 3278.21,
+        "loginResolvedMs": 2765.58,
+        "loginToReadyMs": 2765.56,
         "readyEventFired": true,
-        "wsPingMs": 276,
-        "wsPingAfterMs": 276
+        "wsPingMs": 284,
+        "wsPingAfterMs": 284
       },
       "samples": {
         "guildFetch": {
-          "min": 0.22,
-          "median": 0.22,
-          "mean": 0.22,
-          "max": 0.22,
+          "min": 0.31,
+          "median": 0.31,
+          "mean": 0.31,
+          "max": 0.31,
           "samples": [
-            0.22
+            0.31
           ]
         },
         "channelsFetch": {
-          "min": 394.58,
-          "median": 394.58,
-          "mean": 394.58,
-          "max": 394.58,
+          "min": 575.83,
+          "median": 575.83,
+          "mean": 575.83,
+          "max": 575.83,
           "samples": [
-            394.58
+            575.83
           ]
         },
         "messagesFetch": {
-          "min": 405.25,
-          "median": 405.25,
-          "mean": 405.25,
-          "max": 405.25,
+          "min": 601.3,
+          "median": 601.3,
+          "mean": 601.3,
+          "max": 601.3,
           "samples": [
-            405.25
+            601.3
           ]
         }
       },
@@ -145,12 +145,12 @@
         "[WS => Manager] Spawning shards: 0",
         "[WS => Shard 0] [CONNECT] Gateway : wss://gateway.discord.gg/ Version : 9 Encoding : json Compression: none Agent : false",
         "[WS => Shard 0] Setting a HELLO timeout for 20s.",
-        "[WS => Shard 0] [CONNECTED] Took 391ms",
+        "[WS => Shard 0] [CONNECTED] Took 406ms",
         "[WS => Shard 0] Clearing the HELLO timeout.",
         "[WS => Shard 0] Setting a heartbeat interval for 41250ms.",
         "[WS => Shard 0] [IDENTIFY] Shard 0",
-        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":2,\"d\":{\"capabilities\":0,\"properties\":{\"os\":\"Linux\",\"browser\":\"Discord Client\",\"release_channel\":\"stable\",\"client_version\":\"1.0.9261\",\"os_version\":\"10\",\"os_arch\":\"x64\",\"app_arch\":\"x64\",\"system_locale\":\"en-US\",\"has_client_mods\":false,\"browser_user_agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9261 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36\",\"browser_version\":\"138.0.7204.251\",\"os_sdk_version\":\"19045\",\"client_build_number\":637268,\"native_build_number\":93252,\"client_event_source\":null,\"client_app_state\":\"focused\",\"client_launch_id\":\"9e5493b5-07ec-4d18-b166-38406f0eefbf\",\"launch_signature\":\"b5075e6d-2ece-463a-86dd-36ec57812b4f\",\"client_heartbeat_session_id\":\"0ee4f3a4-5939-48c7-932f-6a28479ff8f7\",\"device\":\"Discord Client\",\"is_fast_connect\":false,\"gateway_connect_reasons\":\"AppSkeleton\"},\"compress\":false,\"client_state\":{\"guild_versions\":{}},\"presence\":{\"activities\":[],\"afk\":true,\"since\":0,\"status\":\"online\"},\"token\":\"<redacted-token>\"}}'",
-        "[WS => Shard 0] [READY] Session fd9c25453f6569f8c3cf4934becc372a | Resume url wss://gateway-us-east1-d.discord.gg.",
+        "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":2,\"d\":{\"capabilities\":0,\"properties\":{\"os\":\"Linux\",\"browser\":\"Discord Client\",\"release_channel\":\"stable\",\"client_version\":\"1.0.9261\",\"os_version\":\"10\",\"os_arch\":\"x64\",\"app_arch\":\"x64\",\"system_locale\":\"en-US\",\"has_client_mods\":false,\"browser_user_agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9261 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36\",\"browser_version\":\"138.0.7204.251\",\"os_sdk_version\":\"19045\",\"client_build_number\":637268,\"native_build_number\":93252,\"client_event_source\":null,\"client_app_state\":\"focused\",\"client_launch_id\":\"97cee2f0-a7c8-412c-a8c1-b19edba091fd\",\"launch_signature\":\"648c2c5f-bb92-45d4-b694-63f7cce693c4\",\"client_heartbeat_session_id\":\"ece65b64-9fea-4518-af9b-69230323628f\",\"device\":\"Discord Client\",\"is_fast_connect\":false,\"gateway_connect_reasons\":\"AppSkeleton\"},\"compress\":false,\"client_state\":{\"guild_versions\":{}},\"presence\":{\"activities\":[],\"afk\":true,\"since\":0,\"status\":\"online\"},\"token\":\"<redacted-token>\"}}'",
+        "[WS => Shard 0] [READY] Session 944d10ca7b9a189a9dcc9f6558206a5d | Resume url wss://gateway-us-east1-c.discord.gg.",
         "[WS => Shard 0] [ReadyHeartbeat] Sending a heartbeat.",
         "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":1,\"d\":null}'",
         "[USER_REQUIRED_ACTION] All required actions have been completed.",
@@ -161,7 +161,7 @@
         "[SETTING > Guild 321845546534830085] Sync setting",
         "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":37,\"d\":{\"subscriptions\":{\"321845546534830085\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1390023740410171493\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1528565659347193976\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1529166705081974808\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}}}}}'",
         "[WS => Shard 0] Shard received all its guilds. Marking as fully ready.",
-        "[WS => Shard 0] Heartbeat acknowledged, latency of 276ms.",
+        "[WS => Shard 0] Heartbeat acknowledged, latency of 284ms.",
         "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":37,\"d\":{\"subscriptions\":{\"1390023740410171493\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}}}}}'",
         "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":37,\"d\":{\"subscriptions\":{\"321845546534830085\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}}}}}'"
       ],

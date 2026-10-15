@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T12:48:31.688Z",
+  "generatedAt": "2026-10-15T13:01:55.823Z",
   "sources": {
     "setup": "benchmarks/results/setup.json",
     "local": "benchmarks/results/local.json",
@@ -8,7 +8,7 @@
   "libs": {
     "palantir": {
       "displayName": "palantir.js (hipalantir)",
-      "version": "10.9.21"
+      "version": "10.9.22"
     },
     "djs-selfbot-v13": {
       "displayName": "djs-selfbot-v13",
@@ -17,9 +17,9 @@
   },
   "package": {
     "installMs": {
-      "palantir": 10681,
-      "djs-selfbot-v13": 62427,
-      "djsOverPalantir": 5.84
+      "palantir": 15257,
+      "djs-selfbot-v13": 89555,
+      "djsOverPalantir": 5.87
     },
     "installedPackages": {
       "palantir": 4,
@@ -32,12 +32,12 @@
       "djsOverPalantir": 22.16
     },
     "nodeModulesBytes": {
-      "palantir": 5294580,
+      "palantir": 5295569,
       "djs-selfbot-v13": 544830401,
-      "djsOverPalantir": 102.9
+      "djsOverPalantir": 102.88
     },
     "unpackedBytes": {
-      "palantir": 2350436,
+      "palantir": 2351425,
       "djs-selfbot-v13": 2255213,
       "djsOverPalantir": 0.96
     },
@@ -215,29 +215,29 @@
   },
   "runtime": {
     "coldRequireMsNode": {
-      "palantir": 9.77,
-      "djs-selfbot-v13": 678.97,
-      "djsOverPalantir": 69.52
+      "palantir": 15.89,
+      "djs-selfbot-v13": 1395.61,
+      "djsOverPalantir": 87.81
     },
     "coldRequireMsBun": {
-      "palantir": 22.39,
-      "djs-selfbot-v13": 406.81,
-      "djsOverPalantir": 18.17
+      "palantir": 65,
+      "djs-selfbot-v13": 867.41,
+      "djsOverPalantir": 13.35
     },
     "memoryRssMBAfterRequireNode": {
-      "palantir": 57.79,
-      "djs-selfbot-v13": 95.7,
-      "djsOverPalantir": 1.66
+      "palantir": 56.99,
+      "djs-selfbot-v13": 95.81,
+      "djsOverPalantir": 1.68
     },
     "instantiateMsNode": {
-      "palantir": 0.58,
-      "djs-selfbot-v13": 1.04,
-      "djsOverPalantir": 1.8
+      "palantir": 1.52,
+      "djs-selfbot-v13": 2.39,
+      "djsOverPalantir": 1.57
     },
     "instantiateMsBun": {
-      "palantir": 2.67,
-      "djs-selfbot-v13": 2.64,
-      "djsOverPalantir": 0.99
+      "palantir": 6.31,
+      "djs-selfbot-v13": 5.44,
+      "djsOverPalantir": 0.86
     }
   },
   "network": {
@@ -247,14 +247,14 @@
       "djs-selfbot-v13": true
     },
     "loginToReadyMs": {
-      "palantir": 1700.11,
-      "djs-selfbot-v13": 3278.21,
-      "djsOverPalantir": 1.93
+      "palantir": 2019.94,
+      "djs-selfbot-v13": 2765.56,
+      "djsOverPalantir": 1.37
     },
     "wsPingMs": {
-      "palantir": 294,
-      "djs-selfbot-v13": 276,
-      "djsOverPalantir": 0.94
+      "palantir": 273,
+      "djs-selfbot-v13": 284,
+      "djsOverPalantir": 1.04
     },
     "errors": {
       "palantir": [
@@ -269,14 +269,14 @@
       ]
     },
     "guildFetch": {
-      "palantir": 0.39,
-      "djs-selfbot-v13": 0.22,
-      "djsOverPalantir": 0.56
+      "palantir": 0.22,
+      "djs-selfbot-v13": 0.31,
+      "djsOverPalantir": 1.41
     },
     "channelsFetch": {
-      "palantir": 459.35,
-      "djs-selfbot-v13": 394.58,
-      "djsOverPalantir": 0.86
+      "palantir": 925.35,
+      "djs-selfbot-v13": 575.83,
+      "djsOverPalantir": 0.62
     },
     "userFetch": {
       "palantir": null,
@@ -284,9 +284,9 @@
       "djsOverPalantir": null
     },
     "messagesFetch": {
-      "palantir": 485.75,
-      "djs-selfbot-v13": 405.25,
-      "djsOverPalantir": 0.83
+      "palantir": 505.11,
+      "djs-selfbot-v13": 601.3,
+      "djsOverPalantir": 1.19
     },
     "send": {
       "palantir": null,
