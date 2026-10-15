@@ -1,0 +1,228 @@
+{
+  "pkg": "hipalantir",
+  "version": "10.9.22",
+  "ok": true,
+  "startedAt": "2026-10-15T13:08:00.066Z",
+  "notes": [
+    "getLastProperties: true",
+    "Options.fetchClientProperties() pre-fetched",
+    "messages.fetch fallback to _fetchMany"
+  ],
+  "propertiesFetched": true,
+  "steps": {
+    "loginResolvedMs": 1484.24,
+    "loginToReadyMs": 1484.22,
+    "readyEventFired": true,
+    "wsPingMs": 297,
+    "wsPingAfterMs": 297
+  },
+  "samples": {
+    "guildFetch": {
+      "min": 0.59,
+      "median": 0.59,
+      "mean": 0.59,
+      "max": 0.59,
+      "samples": [
+        0.59
+      ]
+    },
+    "channelsFetch": {
+      "min": 539.85,
+      "median": 539.85,
+      "mean": 539.85,
+      "max": 539.85,
+      "samples": [
+        539.85
+      ]
+    },
+    "messagesFetch": {
+      "min": 519.22,
+      "median": 519.22,
+      "mean": 519.22,
+      "max": 519.22,
+      "samples": [
+        519.22
+      ]
+    },
+    "rolesFetch": {
+      "min": 416.05,
+      "median": 416.05,
+      "mean": 416.05,
+      "max": 416.05,
+      "samples": [
+        416.05
+      ]
+    },
+    "membersFetch": {
+      "min": 295.79,
+      "median": 295.79,
+      "mean": 295.79,
+      "max": 295.79,
+      "samples": [
+        295.79
+      ]
+    },
+    "memberFetch": {
+      "min": 0.23,
+      "median": 0.23,
+      "mean": 0.23,
+      "max": 0.23,
+      "samples": [
+        0.23
+      ]
+    },
+    "roleCreate": {
+      "min": 407.1,
+      "median": 407.1,
+      "mean": 407.1,
+      "max": 407.1,
+      "samples": [
+        407.1
+      ]
+    },
+    "roleEdit": {
+      "min": 1242.05,
+      "median": 1242.05,
+      "mean": 1242.05,
+      "max": 1242.05,
+      "samples": [
+        1242.05
+      ]
+    },
+    "roleDelete": {
+      "min": 394.26,
+      "median": 394.26,
+      "mean": 394.26,
+      "max": 394.26,
+      "samples": [
+        394.26
+      ]
+    },
+    "guildEdit": {
+      "min": 430.22,
+      "median": 430.22,
+      "mean": 430.22,
+      "max": 430.22,
+      "samples": [
+        430.22
+      ]
+    },
+    "channelEdit": {
+      "min": 370.25,
+      "median": 370.25,
+      "mean": 370.25,
+      "max": 370.25,
+      "samples": [
+        370.25
+      ]
+    },
+    "send": {
+      "min": 436.66,
+      "median": 542.43,
+      "mean": 544.16,
+      "max": 653.39,
+      "samples": [
+        436.66,
+        542.43,
+        653.39
+      ]
+    },
+    "edit": {
+      "min": 473.9,
+      "median": 517.6,
+      "mean": 506.9,
+      "max": 529.2,
+      "samples": [
+        473.9,
+        517.6,
+        529.2
+      ]
+    },
+    "react": {
+      "min": 390.11,
+      "median": 402.98,
+      "mean": 418.26,
+      "max": 461.69,
+      "samples": [
+        390.11,
+        402.98,
+        461.69
+      ]
+    },
+    "unreact": {
+      "min": 381.11,
+      "median": 468.21,
+      "mean": 455.99,
+      "max": 518.64,
+      "samples": [
+        381.11,
+        468.21,
+        518.64
+      ]
+    },
+    "delete": {
+      "min": 362.89,
+      "median": 377.73,
+      "mean": 395.76,
+      "max": 446.65,
+      "samples": [
+        362.89,
+        377.73,
+        446.65
+      ]
+    }
+  },
+  "debugLog": [
+    "Logging on with a user token is unfortunately against the Discord `Terms of Service` <https://support.discord.com/hc/en-us/articles/115002192352> and doing so might potentially get your account banned. Use this at your own risk.",
+    "Provided token: <redacted-token>",
+    "Preparing to connect to the gateway...",
+    "[WS => Manager] Fetched Gateway Information URL: wss://gateway.discord.gg Recommended Shards: 1",
+    "[WS => Manager] Session Limit Information Total: Infinity Remaining: Infinity",
+    "[WS => Manager] Spawning shards: 0",
+    "[WS => Shard 0] [CONNECT] Gateway : wss://gateway.discord.gg/ Version : 9 Encoding : json Compression: none Agent : false",
+    "[WS => Shard 0] Setting a HELLO timeout for 20s.",
+    "[WS => Shard 0] [CONNECTED] Took 447ms",
+    "[WS => Shard 0] Clearing the HELLO timeout.",
+    "[WS => Shard 0] Setting a heartbeat interval for 41250ms.",
+    "[WS => Shard 0] [IDENTIFY] Shard 0",
+    "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":2,\"d\":{\"capabilities\":0,\"properties\":{\"os\":\"Linux\",\"browser\":\"Discord Client\",\"release_channel\":\"stable\",\"client_version\":\"1.0.9261\",\"os_version\":\"10\",\"os_arch\":\"x64\",\"app_arch\":\"x64\",\"system_locale\":\"en-US\",\"has_client_mods\":false,\"browser_user_agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9261 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36\",\"browser_version\":\"138.0.7204.251\",\"os_sdk_version\":\"19045\",\"client_build_number\":637268,\"native_build_number\":93252,\"client_event_source\":null,\"client_app_state\":\"focused\",\"client_launch_id\":\"d71e030a-8fcb-49f9-8264-2d6f2147e08c\",\"launch_signature\":\"25460369-9ae6-44f1-bbd2-f70608766154\",\"client_heartbeat_session_id\":\"290072db-0cc4-4cc2-8599-e495162096c3\",\"device\":\"Discord Client\",\"is_fast_connect\":false,\"gateway_connect_reasons\":\"AppSkeleton\"},\"compress\":false,\"client_state\":{\"guild_versions\":{}},\"presence\":{\"activities\":[],\"afk\":true,\"since\":0,\"status\":\"online\"},\"token\":\"<redacted-token>\"}}'",
+    "[WS => Shard 0] [READY] Session 2ad50dff6e02968e163a9cbb7aca3637 | Resume url wss://gateway-us-east1-b.discord.gg.",
+    "[WS => Shard 0] [ReadyHeartbeat] Sending a heartbeat.",
+    "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":1,\"d\":null}'",
+    "[USER_REQUIRED_ACTION] All required actions have been completed.",
+    "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":3,\"d\":{\"activities\":[],\"afk\":true,\"since\":0,\"status\":\"online\"}}'",
+    "[SETTING > ClientUser] Sync setting",
+    "[SETTING > ClientUser] Sync activities & status",
+    "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":3,\"d\":{\"activities\":[],\"afk\":true,\"since\":0,\"status\":\"online\"}}'",
+    "[SETTING > Guild 1130158543237030049] Sync setting",
+    "[SETTING > Guild 1520220793261265016] Sync setting",
+    "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":37,\"d\":{\"subscriptions\":{\"1130158543237030049\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1232815453907189922\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1479977922038206627\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1519408752716021841\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1520220793261265016\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1536350049292910595\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}},\"1560277257396948993\":{\"typing\":true,\"threads\":true,\"activities\":true,\"member_updates\":true,\"thread_member_lists\":[],\"members\":[],\"channels\":{}}}}}'",
+    "[WS => Shard 0] Shard received all its guilds. Marking as fully ready.",
+    "[WS => Shard 0] Heartbeat acknowledged, latency of 297ms.",
+    "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":8,\"d\":{\"guild_id\":\"1560277257396948993\",\"presences\":true,\"query\":\"\",\"nonce\":\"1560278145138032640\",\"limit\":10}}'",
+    "[MESSAGE EDIT DEBUG] Guild ID: 1560277257396948993 Channel ID: 1560277257954656348 Message ID: 1560278159327502457 Message Author: 1519671374963019826 Bot User ID: 1519671374963019826 Channel Type: GUILD_TEXT Permissions: VIEW_CHANNEL: true SEND_MESSAGES: true READ_MESSAGE_HISTORY: true MANAGE_MESSAGES: true Message Editable: true Message Webhook: false Message Cached: true Error: None Timestamp: 2026-10-15T13:08:22.162Z",
+    "[MESSAGE EDIT DEBUG] Guild ID: 1560277257396948993 Channel ID: 1560277257954656348 Message ID: 1560278178231095339 Message Author: 1519671374963019826 Bot User ID: 1519671374963019826 Channel Type: GUILD_TEXT Permissions: VIEW_CHANNEL: true SEND_MESSAGES: true READ_MESSAGE_HISTORY: true MANAGE_MESSAGES: true Message Editable: true Message Webhook: false Message Cached: true Error: None Timestamp: 2026-10-15T13:08:26.551Z",
+    "[MESSAGE EDIT DEBUG] Guild ID: 1560277257396948993 Channel ID: 1560277257954656348 Message ID: 1560278195930923019 Message Author: 1519671374963019826 Bot User ID: 1519671374963019826 Channel Type: GUILD_TEXT Permissions: VIEW_CHANNEL: true SEND_MESSAGES: true READ_MESSAGE_HISTORY: true MANAGE_MESSAGES: true Message Editable: true Message Webhook: false Message Cached: true Error: None Timestamp: 2026-10-15T13:08:30.676Z",
+    "[WS => Shard 0] Clearing the heartbeat interval.",
+    "[WS => Shard 0] [WebSocket] Destroy: Attempting to close the WebSocket. | WS State: CLOSED",
+    "[WS => Shard 0] WS State: CLOSED",
+    "[WS => Shard 0] [WebSocket] Adding a WebSocket close timeout to ensure a correct WS reconnect. Timeout: 5000ms",
+    "[WS => Shard 0] [CLOSE] Event Code: 4003 Clean : true Reason : Not authenticated.",
+    "[WS => Shard 0] Session id is present, attempting an immediate reconnect...",
+    "[WS => Shard 0] [CONNECT] Gateway : wss://gateway-us-east1-b.discord.gg Version : 9 Encoding : json Compression: none Agent : false",
+    "[WS => Shard 0] Setting a HELLO timeout for 20s.",
+    "[WS => Shard 0] [WebSocket] Clearing the close timeout.",
+    "[WS => Shard 0] [CONNECTED] Took 491ms",
+    "[WS => Shard 0] Clearing the HELLO timeout.",
+    "[WS => Shard 0] Setting a heartbeat interval for 41250ms.",
+    "[WS => Shard 0] [RESUME] Session 2ad50dff6e02968e163a9cbb7aca3637, sequence 84",
+    "[WS => Shard 0] [WebSocketShard] send packet '{\"op\":6,\"d\":{\"token\":\"<redacted-token>\",\"session_id\":\"2ad50dff6e02968e163a9cbb7aca3637\",\"seq\":84}}'",
+    "[WS => Shard 0] [INVALID SESSION] Resumable: false.",
+    "[WS => Shard 0] Failed to connect to the gateway, requeueing...",
+    "[WS => Manager] Shard Queue Size: 1; continuing in 5 seconds..."
+  ],
+  "errors": [
+    "userFetchSelf: Unauthorized"
+  ],
+  "channelId": "1560277257954656348"
+}

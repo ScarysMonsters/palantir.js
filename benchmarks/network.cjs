@@ -29,6 +29,7 @@ async function worker() {
   const guildId = getArg('guild');
   const outPath = getArg('out');
   const token = process.env.BENCH_TOKEN;
+  const extended = argv.includes('--extended');
 
   const out = {
     pkg,
@@ -128,6 +129,63 @@ async function worker() {
       await timed('messagesFetch', () => fetchMessages({ limit: 10 }));
     } catch (e) {
       out.errors.push(`messagesFetch: ${e.message}`);
+    }
+
+    const withTimeout = (fn, ms) =>
+      new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error(`op timeout ${ms}ms`)), ms);
+        timer.unref?.();
+        Promise.resolve()
+          .then(fn)
+          .then(
+            value => {
+              clearTimeout(timer);
+              resolve(value);
+            },
+            error => {
+              clearTimeout(timer);
+              reject(error);
+            },
+          );
+      });
+
+    const tryOp = async (label, fn) => {
+      try {
+        return await timed(label, () => withTimeout(fn, 20000));
+      } catch (e) {
+        out.errors.push(`${label}: ${e.message}`);
+        return null;
+      }
+    };
+
+    await tryOp('userFetchSelf', () => client.user.fetch(true));
+    await tryOp('rolesFetch', () => guild.roles.fetch());
+
+    if (extended) {
+      await tryOp('membersFetch', () => guild.members.fetch({ limit: 10 }));
+      await tryOp('memberFetch', () => guild.members.fetch(client.user.id, { force: true }));
+
+      let benchRole = null;
+      try {
+        benchRole = await timed('roleCreate', () =>
+          withTimeout(() => guild.roles.create({ name: 'palantir-bench', reason: 'palantir benchmark' }), 20000),
+        );
+      } catch (e) {
+        out.errors.push(`roleCreate: ${e.message}`);
+      }
+      if (benchRole) {
+        await tryOp('roleEdit', () => benchRole.edit({ name: 'palantir-bench-edited', reason: 'palantir benchmark' }));
+        await tryOp('roleDelete', () => benchRole.delete('palantir benchmark cleanup'));
+      }
+
+      await tryOp('guildEdit', () => guild.edit({ afkTimeout: guild.afkTimeout }, 'palantir benchmark no-op'));
+      await tryOp('channelEdit', () =>
+        channel.edit({ rateLimitPerUser: channel.rateLimitPerUser ?? 0 }, 'palantir benchmark no-op'),
+      );
+    } else {
+      out.notes.push(
+        'admin/member ops skipped (member chunking and admin bursts can trigger Discord anti-abuse; pass --extended to enable)',
+      );
     }
 
     for (let i = 0; i < 3; i++) {
