@@ -1160,6 +1160,45 @@ export class VanitySniper extends EventEmitter {
   public emit(event: string, ...args: any[]): boolean;
 }
 
+export interface NoneCapOptions {
+  baseUrl?: string;
+  url?: string;
+  enterprise?: boolean | 'auto';
+  userAgent?: string | null;
+  proxy?: string | null;
+  waitSeconds?: number;
+  pollIntervalMs?: number;
+  maxPollMs?: number;
+}
+
+export class NoneCap {
+  public constructor(apiKey: string, options?: NoneCapOptions);
+  public readonly apiKey: string;
+  public readonly baseUrl: string;
+  public readonly url: string;
+  public readonly enterprise: boolean | 'auto';
+  public readonly userAgent: string | null;
+  public readonly proxy: string | null;
+  public readonly waitSeconds: number;
+  public readonly pollIntervalMs: number;
+  public readonly maxPollMs: number;
+  public lastSolve: any | null;
+  public static solver(apiKey: string, options?: NoneCapOptions): CaptchaSolver;
+  public solver(): CaptchaSolver;
+  public solve(captcha: Captcha, userAgent?: string): Promise<string>;
+  public balance(): Promise<{
+    object: 'account';
+    id: string;
+    email: string;
+    credits_balance: number;
+    created_at: string;
+  }>;
+  public report(
+    outcome: 'accepted' | 'rejected' | 'unknown' | 'unused' | 'error',
+    options?: { solveId?: string; reason?: string; context?: string },
+  ): Promise<any>;
+}
+
 export class Options extends null {
   private constructor();
   public static defaultMakeCacheSettings: CacheWithLimitsOptions;

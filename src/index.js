@@ -55,6 +55,7 @@ defineModule('Intents', './util/Intents');
 defineModule('LimitedCollection', './util/LimitedCollection');
 defineModule('MessageFlags', './util/MessageFlags');
 defineModule('Options', './util/Options');
+defineModule('NoneCap', './util/NoneCap');
 defineModule('Permissions', './util/Permissions');
 defineModule('RateLimitError', './rest/RateLimitError');
 defineModule('RoleFlags', './util/RoleFlags');

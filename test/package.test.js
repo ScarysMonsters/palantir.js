@@ -31,7 +31,7 @@ describe('package integrity', () => {
     const index = require('../src/index.js');
     const elapsed = performance.now() - start;
     expect(elapsed).toBeLessThan(100);
-    expect(Object.keys(index).length).toBe(164);
+    expect(Object.keys(index).length).toBe(165);
     expect(index.version).toMatch(/^\d+\.\d+\.\d+/);
   });
 

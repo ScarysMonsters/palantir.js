@@ -45,6 +45,10 @@ const Intents = require('./Intents');
  *    data: captcha.captcha_rqdata,
  *  }).then(res => res.data)
  * }
+ * @example
+ * // Built-in NoneCap support (https://nonecap.com)
+ * const { NoneCap } = require("palantir.js")
+ * client.options.captchaSolver = NoneCap.solver('nc_live_...')
  */
 
 /**
