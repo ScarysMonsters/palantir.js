@@ -59,7 +59,7 @@ This is what **this fork** actually changed. The features added by the parent fo
 
 ### Fast startup: lazy-loaded API
 
-- Every one of the 163 exports in `src/index.js` is resolved lazily on first access.
+- Every one of the 165 exports in `src/index.js` is resolved lazily on first access.
 - `require('hipalantir')` costs **~6 ms instead of ~330 ms**; the full graph only loads when you
   actually use `Client` or another export. The export surface is byte-for-byte identical (names,
   order, types).
@@ -84,7 +84,39 @@ This is what **this fork** actually changed. The features added by the parent fo
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `ws.compress` | `true` | Enables the gateway `zlib-stream` compression. Set to `false` to save CPU at the cost of bandwidth |
+| `ws.compress` | `false` | Enables the gateway `zlib-stream` compression. Disabled by default to match `djs-selfbot-v13` (plain JSON frames, no `zlib-sync` needed) |
+
+### Built-in captcha solving (NoneCap)
+
+- `NoneCap` implements the `captchaSolver` hook out of the box: it submits the hCaptcha challenge
+  (`hcaptcha_enterprise` when `rqdata` is present) to [nonecap.com](https://nonecap.com), polls until
+  the solve is terminal and returns the `P1_` token — plus `balance()`, `report()` for feedback and
+  `lastSolve` (`resp_key`, solver `user_agent`).
+- The client user agent is forwarded to the solver so the token is submitted with the same one.
+
+```js
+const { Client, NoneCap } = require('hipalantir');
+
+const client = new Client({
+  captchaSolver: NoneCap.solver('nc_live_...'), // or new NoneCap(key, { proxy, waitSeconds, ... })
+});
+```
+
+### Vanity sniper
+
+`client.user.setSniper(snipeGuild, claimGuild, vanity, options)` watches a vanity through the gateway
+(`GUILD_UPDATE` of the origin guild, `GUILD_DELETE`) with a public invite polling fallback, and claims
+it on another guild as soon as it is released: a single bounded `PATCH /guilds/:id/vanity-url` with
+the 2FA challenge (`60003`) solved lazily through `TOTPKey` (or a password) and replayed once with
+`X-Discord-Mfa-Authorization`.
+
+```js
+const sniper = client.user.setSniper('origin-guild-id', 'claim-guild-id', 'discord.gg/my-vanity');
+
+sniper.on('drop', info => console.log(`/${info.oldVanity} dropped via ${info.source}`));
+sniper.on('claimed', result => console.log(`claimed in ${result.durationMs}ms`));
+sniper.on('claimFailed', result => console.error(result.status, result.code));
+```
 
 ### Fixes
 
@@ -93,12 +125,14 @@ This is what **this fork** actually changed. The features added by the parent fo
 - Opus encoder: fixed the `frameSize` argument (opusscript) and the stereo→mono channel mix-up.
 - `Util.uploadFile` converts Node streams for the native `fetch`.
 - REST: the cookie jar persists `Set-Cookie` headers and replays them per domain, path and security.
+- Gateway: binary frames are decoded as `ArrayBuffer` instead of `Blob`, so `zlib-stream` login works on Node without a DOM.
+- `Guild#_patch` tracks `vanity_url_code`; `DiscordAPIError.rawError` exposes the raw response body (MFA tickets).
 
 ### Tests and CI
 
-- `bun test` — 23 offline tests: TOTP RFC vectors, QR matrix hashes (validated against a real
-  decoder), gateway compression, REST pipeline, voice primitives and package integrity
-  (lazy exports, no external `require` outside the optional loaders).
+- `bun test` — 44 offline tests: TOTP RFC vectors, QR matrix hashes (validated against a real
+  decoder), gateway compression, REST pipeline, voice primitives, vanity sniper, NoneCap solver
+  and package integrity (lazy exports, no external `require` outside the optional loaders).
 - `bun run test:network` — live gateway (HELLO over `zlib-stream`) + REST tests.
 - GitHub Actions workflow (`ubuntu` + `windows`).
 
