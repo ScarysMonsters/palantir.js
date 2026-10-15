@@ -1083,6 +1083,81 @@ export class ClientUser extends User {
   public searchTab(options?: UserMessageSearchTabOptions): Promise<{ messages: any[][]; total_results: number }>;
   public fetchProfile(userId: Snowflake, options?: FetchUserProfileOptions): Promise<UserProfile>;
   public spoofDevice(device?: 'desktop' | 'android' | 'iphone' | 'mobile' | 'web' | 'ps5' | 'xbox' | 'vr'): this;
+  public setSniper(
+    snipeGuild: Guild | Snowflake,
+    claimGuild: Guild | Snowflake,
+    vanityUrl: string,
+    options?: VanitySniperOptions,
+  ): VanitySniper;
+}
+
+export interface VanitySniperOptions {
+  mfaSecret?: string | null;
+  password?: string | null;
+  mfaType?: 'totp' | 'password' | null;
+  pollInvites?: boolean;
+  pollIntervalMs?: number;
+  maxClaimAttempts?: number;
+  keepWatching?: boolean;
+}
+
+export interface VanitySnipResult {
+  success: boolean;
+  vanity: string;
+  guildId: Snowflake;
+  attempts: number;
+  durationMs: number;
+  status?: number;
+  code?: number | null;
+  error?: string;
+}
+
+export class VanitySniper extends EventEmitter {
+  public constructor(
+    client: Client,
+    options: VanitySniperOptions & { snipeGuildId: Snowflake; claimGuildId: Snowflake; vanity: string },
+  );
+  public readonly client: Client;
+  public readonly snipeGuildId: Snowflake;
+  public readonly claimGuildId: Snowflake;
+  public readonly vanity: string;
+  public readonly mfaSecret: string | null;
+  public readonly password: string | null;
+  public readonly mfaType: string;
+  public readonly pollInvites: boolean;
+  public readonly pollIntervalMs: number;
+  public readonly maxClaimAttempts: number;
+  public readonly keepWatching: boolean;
+  public running: boolean;
+  public claiming: boolean;
+  public armed: boolean;
+  public pollStreak: number;
+  public pollCooldownUntil: number;
+  public static normalizeVanity(input: string): string;
+  public static resolveGuildId(resolvable: Guild | Snowflake): Snowflake;
+  public start(): this;
+  public stop(): this;
+  public claim(): Promise<VanitySnipResult>;
+  public on(
+    event: 'watching',
+    listener: (info: { vanity: string; snipeGuildId: Snowflake; claimGuildId: Snowflake; armed: boolean }) => void,
+  ): this;
+  public on(
+    event: 'drop',
+    listener: (info: {
+      source: 'gateway' | 'poll';
+      guildId: Snowflake;
+      oldVanity: string | null;
+      newVanity: string | null;
+    }) => void,
+  ): this;
+  public on(event: 'claimed', listener: (result: VanitySnipResult) => void): this;
+  public on(event: 'claimFailed', listener: (result: VanitySnipResult) => void): this;
+  public on(event: 'pollBreak', listener: (info: { status: number; code: number | null }) => void): this;
+  public on(event: string, listener: (...args: any[]) => void): this;
+  public once(event: string, listener: (...args: any[]) => void): this;
+  public off(event: string, listener: (...args: any[]) => void): this;
+  public emit(event: string, ...args: any[]): boolean;
 }
 
 export class Options extends null {

@@ -736,6 +736,46 @@ class ClientUser extends User {
   }
 
   /**
+   * Starts watching a vanity code and claims it on another guild as soon as it is released.
+   * The watched guild is monitored through gateway updates and invite polling; the claim is a
+   * single `PATCH /guilds/:id/vanity-url` request that automatically solves the 2FA challenge
+   * (TOTP or password) when Discord requires it.
+   * @param {GuildResolvable} snipeGuild The guild holding the vanity to watch
+   * @param {GuildResolvable} claimGuild The guild where the vanity will be claimed
+   * @param {string} vanityUrl The vanity to snipe (`code`, `discord.gg/code` or a full URL)
+   * @param {Object} [options] Sniper options
+   * @param {?string} [options.mfaSecret] TOTP secret used for 2FA challenges (defaults to `client.options.TOTPKey`)
+   * @param {?string} [options.password] Account password used for 2FA challenges
+   * @param {?string} [options.mfaType] Force the MFA type: `totp` or `password`
+   * @param {boolean} [options.pollInvites=true] Poll `GET /invites/:code` as a fallback detection
+   * @param {number} [options.pollIntervalMs=1500] Polling interval in milliseconds
+   * @param {number} [options.maxClaimAttempts=4] Maximum attempts for retryable claim failures
+   * @param {boolean} [options.keepWatching=false] Keep watching after a successful claim
+   * @returns {VanitySniper}
+   * @example
+   * const sniper = client.user.setSniper('123456789012345678', '234567890123456789', 'discord.gg/tsukoyomi', {
+   *   keepWatching: true,
+   * });
+   * sniper.on('drop', info => console.log(`/${info.oldVanity} dropped (via ${info.source})`));
+   * sniper.on('claimed', result => console.log(`claimed in ${result.durationMs}ms`));
+   */
+  setSniper(snipeGuild, claimGuild, vanityUrl, options = {}) {
+    const VanitySniper = require('./VanitySniper');
+    return new VanitySniper(this.client, {
+      snipeGuildId: VanitySniper.resolveGuildId(snipeGuild),
+      claimGuildId: VanitySniper.resolveGuildId(claimGuild),
+      vanity: VanitySniper.normalizeVanity(vanityUrl),
+      mfaSecret: options.mfaSecret ?? this.client.options.TOTPKey ?? null,
+      password: options.password ?? null,
+      mfaType: options.mfaType ?? null,
+      pollInvites: options.pollInvites,
+      pollIntervalMs: options.pollIntervalMs,
+      maxClaimAttempts: options.maxClaimAttempts,
+      keepWatching: options.keepWatching,
+    }).start();
+  }
+
+  /**
  * Fetch a user's profile
  * @param {Snowflake} userId The user's ID
  * @param {Object} [options] Options

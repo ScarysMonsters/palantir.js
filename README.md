@@ -543,6 +543,7 @@ Deploying on Netlify (config already provided in `netlify.toml`, publish directo
 - [x] VoiceChannel.setStatus
 - [x] ClientProperties: automatic build number
 - [x] Captcha solver hook & native TOTP handler
+- [x] Vanity Sniper: gateway + polling watch, single-shot claim, lazy MFA
 - [x] Dependency-light runtime & lazy-loaded API
 - [ ] Complete API documentation
 

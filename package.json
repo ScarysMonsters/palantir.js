@@ -1,6 +1,6 @@
 {
   "name": "hipalantir",
-  "version": "10.9.22",
+  "version": "10.9.23",
   "description": "A lightweight Bun-native Discord selfbot library — built on Bun/Node builtins, with only the DAVE native binary as dependency",
   "main": "./src/index.js",
   "types": "./typings/index.d.ts",

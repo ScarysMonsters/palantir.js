@@ -237,6 +237,14 @@ class Guild extends AnonymousGuild {
       this.premiumProgressBarEnabled = data.premium_progress_bar_enabled;
     }
 
+    if ('vanity_url_code' in data) {
+      /**
+       * The vanity invite code for this guild, or `null` if it has none
+       * @type {?string}
+       */
+      this.vanityURLCode = data.vanity_url_code;
+    }
+
     /**
      * An array of enabled guild features, here are the possible values:
      * * ANIMATED_ICON

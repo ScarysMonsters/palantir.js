@@ -124,6 +124,7 @@ defineModule('CategoryChannel', './structures/CategoryChannel');
 defineMember('Channel', './structures/Channel', 'Channel');
 defineModule('ClientPresence', './structures/ClientPresence');
 defineModule('ClientUser', './structures/ClientUser');
+defineModule('VanitySniper', './structures/VanitySniper');
 defineModule('Collector', './structures/interfaces/Collector');
 defineModule('DirectoryChannel', './structures/DirectoryChannel');
 defineModule('DMChannel', './structures/DMChannel');

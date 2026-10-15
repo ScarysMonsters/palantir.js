@@ -30,6 +30,12 @@ class DiscordAPIError extends Error {
     this.code = error.code;
 
     /**
+     * The raw error object returned by Discord
+     * @type {*}
+     */
+    this.rawError = error;
+
+    /**
      * The HTTP status code
      * @type {number}
      */
