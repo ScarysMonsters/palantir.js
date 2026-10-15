@@ -1,0 +1,14 @@
+# palantir.js API documentation — static site published straight from this repository.
+# docs/main.json and docs/index.html are committed, so no build step is required.
+
+[build]
+  publish = "docs"
+
+# Optional: regenerate the documentation during the Netlify build instead of committing it.
+# The Netlify Ubuntu build image does not ship Bun, so it has to be installed first.
+# command = "curl -fsSL https://bun.sh/install | bash && ~/.bun/bin/bun install && ~/.bun/bin/bun run docs"
+
+[[headers]]
+  for = "/main.json"
+  [headers.values]
+    Cache-Control = "public, max-age=300"

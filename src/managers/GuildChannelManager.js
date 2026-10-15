@@ -1,7 +1,7 @@
 'use strict';
 
 const process = require('node:process');
-const { Collection } = require('@discordjs/collection');
+const { Collection } = require('../util/Collection');
 const CachedManager = require('./CachedManager');
 const { Error, TypeError } = require('../errors');
 const GuildChannel = require('../structures/GuildChannel');

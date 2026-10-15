@@ -17,10 +17,10 @@ Thanks to mrjvs for discovering how Discord transmits data and the VP8 codec.
 Please use the @dank074/discord-video-stream library for the best support.
 */
 
-const fs = require('fs');
-const net = require('net');
-const path = require('path');
-const process = require('process');
+const fs = require('node:fs');
+const net = require('node:net');
+const path = require('node:path');
+const process = require('node:process');
 
 let counter = 0;
 

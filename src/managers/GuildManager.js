@@ -2,7 +2,7 @@
 
 const process = require('node:process');
 const { setTimeout } = require('node:timers');
-const { Collection } = require('@discordjs/collection');
+const { Collection } = require('../util/Collection');
 const CachedManager = require('./CachedManager');
 const { Guild } = require('../structures/Guild');
 const GuildChannel = require('../structures/GuildChannel');

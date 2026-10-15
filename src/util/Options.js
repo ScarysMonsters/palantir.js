@@ -123,7 +123,8 @@ const Intents = require('./Intents');
  * WebSocket options (these are left as snake_case to match the API)
  * @typedef {Object} WebsocketOptions
  * @property {AgentOptions} [agent={}] HTTPS Agent options (WS Proxy)
- * @property {boolean} [compress=false] Whether to compress data sent on the connection
+ * @property {boolean} [compress=true] Whether to enable the gateway `zlib-stream` compression.
+ * Set to `false` to save CPU at the cost of bandwidth.
  * @property {WebSocketProperties} [properties] Properties to identify the client with
  */
 
@@ -222,7 +223,7 @@ class Options extends null {
           client_event_source: null,
           client_app_state: 'focused',
         }),
-        compress: false,
+        compress: true,
         client_state: {
           guild_versions: {},
         },
@@ -280,7 +281,7 @@ class Options extends null {
    * });
    */
   static cacheWithLimits(settings = {}) {
-    const { Collection } = require('@discordjs/collection');
+    const { Collection } = require('./Collection');
     const LimitedCollection = require('./LimitedCollection');
 
     return manager => {
@@ -315,7 +316,7 @@ class Options extends null {
    * @returns {CacheFactory}
    */
   static cacheEverything() {
-    const { Collection } = require('@discordjs/collection');
+    const { Collection } = require('./Collection');
     return () => new Collection();
   }
 

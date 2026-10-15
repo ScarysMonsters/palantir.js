@@ -1,10 +1,8 @@
 'use strict';
 
 const { setInterval } = require('node:timers');
-const { Collection } = require('@discordjs/collection');
-const makeFetchCookie = require('fetch-cookie');
-const { CookieJar } = require('tough-cookie');
-const { fetch: fetchOriginal } = require('undici');
+const { Collection } = require('../util/Collection');
+const { CookieJar } = require('./CookieJar');
 const APIRequest = require('./APIRequest');
 const routeBuilder = require('./APIRouter');
 const RequestHandler = require('./RequestHandler');
@@ -21,7 +19,16 @@ class RESTManager {
     this.globalReset = null;
     this.globalDelay = null;
     this.cookieJar = new CookieJar();
-    this.fetch = makeFetchCookie.default(fetchOriginal, this.cookieJar);
+    // Cookie-aware fetch built on the native Bun fetch (zero dependency replacement for
+    // `fetch-cookie` + `tough-cookie` + `undici`).
+    this.fetch = async (url, options = {}) => {
+      const headers = new Headers(options.headers ?? {});
+      const cookie = this.cookieJar.getCookieString(url);
+      if (cookie) headers.set('cookie', cookie);
+      const response = await fetch(url, { ...options, headers });
+      this.cookieJar.storeFromResponse(url, response);
+      return response;
+    };
     if (client.options.restSweepInterval > 0) {
       this.sweepInterval = setInterval(() => {
         this.handlers.sweep(handler => handler._inactive);

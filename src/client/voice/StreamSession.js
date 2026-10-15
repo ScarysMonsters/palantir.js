@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { EventEmitter } = require('events');
+const { EventEmitter } = require('node:events');
 const StageChannel = require('../../structures/StageChannel');
 
 /**

@@ -1,8 +1,8 @@
 'use strict';
 
-const udp = require('dgram');
-const EventEmitter = require('events');
-const { isIP } = require('net');
+const udp = require('node:dgram');
+const EventEmitter = require('node:events');
+const { isIP } = require('node:net');
 const { Buffer } = require('node:buffer');
 const { Error } = require('../../../errors');
 const { VoiceOpcodes } = require('../../../util/Constants');

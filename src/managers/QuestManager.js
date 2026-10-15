@@ -1,8 +1,7 @@
 'use strict';
 
 const { randomUUID } = require('node:crypto');
-const { fetch } = require('undici');
-const { Collection } = require('@discordjs/collection');
+const { Collection } = require('../util/Collection');
 const VoiceSession = require('../client/voice/VoiceSession');
 const BaseManager = require('./BaseManager');
 

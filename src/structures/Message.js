@@ -1,7 +1,7 @@
 'use strict';
 
 const process = require('node:process');
-const { Collection } = require('@discordjs/collection');
+const { Collection } = require('../util/Collection');
 const Base = require('./Base');
 const BaseMessageComponent = require('./BaseMessageComponent');
 const MessageAttachment = require('./MessageAttachment');

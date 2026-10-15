@@ -5,8 +5,7 @@ const crypto = require('node:crypto');
 const EventEmitter = require('node:events');
 const { StringDecoder } = require('node:string_decoder');
 const { setTimeout } = require('node:timers');
-const { fetch } = require('undici');
-const WebSocket = require('ws');
+const { WebSocket } = require('../WebSocket');
 const { UserAgent } = require('./Constants');
 const Options = require('./Options');
 
@@ -300,8 +299,8 @@ class DiscordAuthWebsocket extends EventEmitter {
    * @returns {void}
    */
   destroy() {
-    if (!this.ws) return;
-    this.ws.close();
+    if (!this.#ws) return;
+    this.#ws.close();
     this.emit(Event.DEBUG, 'WebSocket closed.');
     /**
      * Emitted whenever a connection is closed.
@@ -316,7 +315,8 @@ class DiscordAuthWebsocket extends EventEmitter {
    */
   generateQR() {
     if (!this.#fingerprint) return;
-    require('qrcode').toString(this.AuthURL, { type: 'utf8', errorCorrectionLevel: 'L' }, (err, url) => {
+    // eslint-disable-next-line global-require
+    require('./QRCode').toString(this.AuthURL, { type: 'utf8', errorCorrectionLevel: 'L' }, (err, url) => {
       if (err) {
         //
       }

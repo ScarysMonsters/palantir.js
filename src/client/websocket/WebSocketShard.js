@@ -2,6 +2,7 @@
 
 const EventEmitter = require('node:events');
 const { setTimeout, setInterval, clearTimeout } = require('node:timers');
+const nodeZlib = require('node:zlib');
 const WebSocket = require('../../WebSocket');
 const { Status, Events, ShardEvents, Opcodes, WSEvents, WSCodes } = require('../../util/Constants');
 const Intents = require('../../util/Intents');
@@ -10,11 +11,48 @@ const Util = require('../../util/Util');
 const STATUS_KEYS = Object.keys(Status);
 const CONNECTION_STATE = Object.keys(WebSocket.WebSocket);
 
-let zlib;
+/**
+ * Streaming inflate adapter (gateway `zlib-stream` compression) built on `node:zlib`.
+ * Replaces the native `zlib-sync` addon with zero dependencies.
+ */
+class InflateStream {
+  constructor() {
+    this.inflate = nodeZlib.createInflate({ chunkSize: 65535 });
+    this.chunks = [];
+    this._pendingResolve = null;
+    this.inflate.on('data', chunk => this.chunks.push(chunk));
+    // Never let a zlib failure stall the shard's message chain.
+    this.inflate.on('error', () => this._settle());
+  }
 
-try {
-  zlib = require('zlib-sync');
-} catch {} // eslint-disable-line no-empty
+  _settle() {
+    const resolve = this._pendingResolve;
+    this._pendingResolve = null;
+    if (!resolve) return;
+    const result = this.chunks.length === 0 ? null : this.chunks.length === 1 ? this.chunks[0] : Buffer.concat(this.chunks);
+    this.chunks = [];
+    resolve(result);
+  }
+
+  /**
+   * Pushes compressed data. Resolves with the inflated buffer once a flush boundary is reached.
+   * @param {Buffer} data Compressed chunk
+   * @param {boolean} flush Whether this chunk ends a sync-flush boundary
+   * @returns {Promise<?Buffer>}
+   */
+  push(data, flush) {
+    if (flush && this._pendingResolve) {
+      // Previous segment was never flushed; settle it before queueing the next one.
+      this._settle();
+    }
+    this.inflate.write(data);
+    if (!flush) return Promise.resolve(null);
+    return new Promise(resolve => {
+      this._pendingResolve = resolve;
+      this.inflate.flush(nodeZlib.constants.Z_SYNC_FLUSH, () => this._settle());
+    });
+  }
+}
 
 /**
  * Represents a Shard's WebSocket connection
@@ -257,13 +295,13 @@ class WebSocketShard extends EventEmitter {
 
       const wsQuery = { v: client.options.ws.version };
 
-      if (zlib) {
-        this.inflate = new zlib.Inflate({
-          chunkSize: 65535,
-          flush: zlib.Z_SYNC_FLUSH,
-          to: WebSocket.encoding === 'json' ? 'string' : '',
-        });
+      // Gateway compression (zlib-stream) can be disabled through `ws.compress: false`.
+      const useCompression = client.options.ws.compress !== false;
+      if (useCompression) {
+        this.inflate = new InflateStream();
         wsQuery.compress = 'zlib-stream';
+      } else {
+        this.inflate = null;
       }
 
       this.debug(
@@ -271,7 +309,7 @@ class WebSocketShard extends EventEmitter {
     Gateway    : ${gateway}
     Version    : ${client.options.ws.version}
     Encoding   : ${WebSocket.encoding}
-    Compression: ${zlib ? 'zlib-stream' : 'none'}
+    Compression: ${useCompression ? 'zlib-stream' : 'none'}
     Agent      : ${Util.verifyProxyAgent(client.options.ws.agent)}`,
       );
 
@@ -307,18 +345,29 @@ class WebSocketShard extends EventEmitter {
    * @private
    */
   onMessage({ data }) {
-    let raw;
-    if (data instanceof ArrayBuffer) data = new Uint8Array(data);
-    if (zlib) {
-      const l = data.length;
-      const flush =
-        l >= 4 && data[l - 4] === 0x00 && data[l - 3] === 0x00 && data[l - 2] === 0xff && data[l - 1] === 0xff;
+    // Messages are processed through a promise chain to preserve gateway ordering while
+    // the compressed stream is inflated asynchronously.
+    this._messageChain = (this._messageChain ?? Promise.resolve())
+      .then(() => this._handleMessage(data))
+      .catch(error => this.manager.client.emit(Events.SHARD_ERROR, error, this.id));
+  }
 
-      this.inflate.push(data, flush && zlib.Z_SYNC_FLUSH);
-      if (!flush) return;
-      raw = this.inflate.result;
-    } else {
-      raw = data;
+  /**
+   * Inflates and dispatches a single gateway message.
+   * @param {string|ArrayBuffer|Uint8Array} data Raw message data
+   * @private
+   */
+  async _handleMessage(data) {
+    let raw = data;
+    if (this.inflate && typeof data !== 'string') {
+      const buffer = Buffer.isBuffer(data)
+        ? data
+        : Buffer.from(data instanceof ArrayBuffer ? new Uint8Array(data) : data);
+      const l = buffer.length;
+      const flush =
+        l >= 4 && buffer[l - 4] === 0x00 && buffer[l - 3] === 0x00 && buffer[l - 2] === 0xff && buffer[l - 1] === 0xff;
+      raw = await this.inflate.push(buffer, flush);
+      if (raw === null) return; // Waiting for the rest of the compressed segment
     }
     let packet;
     try {

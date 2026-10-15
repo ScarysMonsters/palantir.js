@@ -1,7 +1,7 @@
 'use strict';
 
 const { Buffer } = require('node:buffer');
-const { Readable } = require('stream');
+const { Readable } = require('node:stream');
 
 const SILENCE_FRAME = Buffer.from([0xf8, 0xff, 0xfe]);
 

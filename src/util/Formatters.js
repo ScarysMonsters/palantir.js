@@ -1,24 +1,59 @@
 'use strict';
 
-const {
-  blockQuote,
-  bold,
-  channelMention,
-  codeBlock,
-  formatEmoji,
-  hideLinkEmbed,
-  hyperlink,
-  inlineCode,
-  italic,
-  quote,
-  roleMention,
-  spoiler,
-  strikethrough,
-  time,
-  TimestampStyles,
-  underscore,
-  userMention,
-} = require('@discordjs/builders');
+/*
+ * Zero dependency reimplementation of the `@discordjs/builders` message formatters.
+ */
+
+const TimestampStyles = {
+  ShortTime: 't',
+  LongTime: 'T',
+  ShortDate: 'd',
+  LongDate: 'D',
+  ShortDateTime: 'f',
+  LongDateTime: 'F',
+  RelativeTime: 'R',
+};
+
+const blockQuote = content => `>>> ${content}`;
+
+const bold = content => `**${content}**`;
+
+const channelMention = channelId => `<#${channelId}>`;
+
+const codeBlock = (languageOrContent, content = undefined) => {
+  if (typeof content === 'undefined') {
+    return `\`\`\`\n${languageOrContent}\n\`\`\``;
+  }
+  return `\`\`\`${languageOrContent}\n${content}\n\`\`\``;
+};
+
+const formatEmoji = (emojiId, animated = false) => `<${animated ? 'a' : ''}:_:${emojiId}>`;
+
+const hideLinkEmbed = url => `<${url}>`;
+
+const hyperlink = (content, url, title = undefined) => {
+  if (typeof title === 'undefined') return `[${content}](${url})`;
+  return `[${content}](${url} "${title.replace(/"/g, '\\"')}")`;
+};
+
+const inlineCode = content => `\`${content}\``;
+
+const italic = content => `*${content}*`;
+
+const quote = content => `> ${content}`;
+
+const roleMention = roleId => `<@&${roleId}>`;
+
+const spoiler = content => `||${content}||`;
+
+const strikethrough = content => `~~${content}~~`;
+
+const time = (date, style = TimestampStyles.ShortDateTime) =>
+  `<t:${Math.round((date instanceof Date ? date.getTime() : date) / 1_000)}:${style}>`;
+
+const underscore = content => `__${content}__`;
+
+const userMention = userId => `<@${userId}>`;
 
 /**
  * Contains various Discord-specific functions for formatting messages.

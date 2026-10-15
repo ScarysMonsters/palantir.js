@@ -1,7 +1,7 @@
 'use strict';
 
-const { Readable } = require('stream');
-const prism = require('prism-media');
+const { Readable } = require('node:stream');
+const prism = require('./Prism');
 const { Error } = require('../../../errors');
 
 /**

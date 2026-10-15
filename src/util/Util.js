@@ -4,8 +4,7 @@ const { Agent } = require('node:http');
 const { parse } = require('node:path');
 const process = require('node:process');
 const { setTimeout } = require('node:timers');
-const { Collection } = require('@discordjs/collection');
-const { fetch } = require('undici');
+const { Collection } = require('./Collection');
 const { Colors, Events } = require('./Constants');
 const { Error: DiscordError, RangeError, TypeError } = require('../errors');
 const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
@@ -869,10 +868,15 @@ class Util extends null {
 
   static uploadFile(data, url) {
     return new Promise((resolve, reject) => {
+      let body = data;
+      if (body && typeof body === 'object' && typeof body.on === 'function' && typeof body.getReader !== 'function') {
+        // Node.js stream -> web ReadableStream, as required by the native fetch.
+        body = require('node:stream').Readable.toWeb(body);
+      }
       fetch(url, {
         method: 'PUT',
-        body: data,
-        duplex: 'half', // Node.js v20
+        body,
+        duplex: 'half', // Required for streamed bodies (Node.js v20+)
       })
         .then(res => {
           if (res.ok) {

@@ -1,10 +1,10 @@
 'use strict';
 
-const EventEmitter = require('events');
+const EventEmitter = require('node:events');
 const { Buffer } = require('node:buffer');
 const crypto = require('node:crypto');
 const { setTimeout } = require('node:timers');
-const { RtpPacket } = require('werift-rtp');
+const { RtpPacket } = require('../util/RtpPacket');
 const Recorder = require('./Recorder');
 const Speaking = require('../../../util/Speaking');
 const Util = require('../../../util/Util');
@@ -19,7 +19,7 @@ const DISCORD_SPEAKING_DELAY = 250;
 const UNPADDED_NONCE_LENGTH = 4;
 const AUTH_TAG_LENGTH = 16;
 
-class Readable extends require('stream').Readable {
+class Readable extends require('node:stream').Readable {
   _read() {} // eslint-disable-line no-empty-function
 }
 

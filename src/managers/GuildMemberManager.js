@@ -3,7 +3,7 @@
 
 const { Buffer } = require('node:buffer');
 const { setTimeout } = require('node:timers');
-const { Collection } = require('@discordjs/collection');
+const { Collection } = require('../util/Collection');
 const CachedManager = require('./CachedManager');
 const { Error, TypeError, RangeError } = require('../errors');
 const BaseGuildVoiceChannel = require('../structures/BaseGuildVoiceChannel');

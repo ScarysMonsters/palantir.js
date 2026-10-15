@@ -4,8 +4,8 @@
 const process = require('node:process');
 const { setInterval } = require('node:timers');
 const { setTimeout } = require('node:timers');
-const { Collection } = require('@discordjs/collection');
-const { authenticator } = require('otplib');
+const { Collection } = require('../util/Collection');
+const { authenticator } = require('../util/TOTP');
 const BaseClient = require('./BaseClient');
 const ActionsManager = require('./actions/ActionsManager');
 const ClientVoiceManager = require('./voice/ClientVoiceManager');

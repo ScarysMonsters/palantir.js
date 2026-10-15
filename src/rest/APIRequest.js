@@ -1,12 +1,33 @@
 'use strict';
 
-const Buffer = require('node:buffer').Buffer;
+const { Buffer } = require('node:buffer');
 const { setTimeout } = require('node:timers');
-const { FormData, buildConnector, Client, ProxyAgent } = require('undici');
-const { ciphers } = require('../util/Constants');
 const Util = require('../util/Util');
 
-let agent = null;
+/**
+ * Converts any supported file source (Buffer, Node stream, web ReadableStream, Blob) into a Blob.
+ * Bun native `FormData` only accepts strings and Blobs.
+ * @param {*} source The file source
+ * @returns {Promise<Blob>}
+ */
+async function fileToBlob(source) {
+  if (source instanceof Blob) return source;
+  if (Buffer.isBuffer(source)) return new Blob([source]);
+  if (source instanceof ArrayBuffer) return new Blob([source]);
+  if (ArrayBuffer.isView(source)) return new Blob([source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength)]);
+  if (typeof source === 'string') return new Blob([source]);
+  if (typeof source === 'object' && typeof source.getReader === 'function') {
+    // Web ReadableStream
+    return new Response(source).blob();
+  }
+  if (typeof source === 'object' && (typeof source.on === 'function' || typeof source.pipe === 'function')) {
+    // Node Readable stream
+    const chunks = [];
+    for await (const chunk of source) chunks.push(chunk);
+    return new Blob(chunks);
+  }
+  return new Blob([String(source)]);
+}
 
 class APIRequest {
   constructor(rest, method, path, options) {
@@ -29,21 +50,14 @@ class APIRequest {
     this.path = `${path}${queryString && `?${queryString}`}`;
   }
 
-  make(captchaKey, captchaRqToken) {
-    if (!agent) {
-      const r_ = Util.checkUndiciProxyAgent(this.client.options.http.agent);
-      if (!r_) {
-        agent = new Client('https://discord.com', {
-          connect: buildConnector({ ciphers: ciphers.join(':') }),
-        });
-      } else {
-        agent = new ProxyAgent({
-          ...r_,
-          ciphers: ciphers.join(':'),
-        });
-      }
-    }
+  // Resolves the proxy to use for this request, if any.
+  _resolveProxy() {
+    const data = Util.checkUndiciProxyAgent(this.client.options.http.agent);
+    if (!data) return undefined;
+    return data.uri;
+  }
 
+  async make(captchaKey, captchaRqToken) {
     const API =
       this.options.versioned === false
         ? this.client.options.http.api
@@ -105,19 +119,16 @@ class APIRequest {
     if (this.options.files?.length) {
       body = new FormData();
       for (const [index, file] of this.options.files.entries()) {
-        // Why undici#FormData doesn't support file stream?
-        // Hacky way to support file stream
         if (file?.file) {
-          body.set(file.key ?? `files[${index}]`, {
-            [Symbol.toStringTag]: 'File',
-            name: file.name,
-            stream: () => file.file,
-          });
+          const blob = await fileToBlob(file.file);
+          body.append(file.key ?? `files[${index}]`, blob, file.name);
         }
       }
       if (typeof this.options.data !== 'undefined') {
         if (this.options.dontUsePayloadJSON) {
-          for (const [key, value] of Object.entries(this.options.data)) body.append(key, value);
+          for (const [key, value] of Object.entries(this.options.data)) {
+            body.append(key, typeof value === 'object' ? JSON.stringify(value) : value);
+          }
         } else {
           body.append('payload_json', JSON.stringify(this.options.data));
         }
@@ -137,12 +148,12 @@ class APIRequest {
     const timeout = setTimeout(() => controller.abort(), this.client.options.restRequestTimeout).unref();
     return this.rest
       .fetch(url, {
-        method: this.method.toUpperCase(), // Undici doesn't normalize "patch" into "PATCH" (which surprisingly follows the spec).
+        method: this.method.toUpperCase(),
         headers,
         body,
         signal: controller.signal,
         redirect: 'follow',
-        dispatcher: agent,
+        proxy: this._resolveProxy(),
         credentials: 'include',
       })
       .finally(() => clearTimeout(timeout));

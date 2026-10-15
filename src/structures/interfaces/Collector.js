@@ -2,7 +2,7 @@
 
 const EventEmitter = require('node:events');
 const { setTimeout } = require('node:timers');
-const { Collection } = require('@discordjs/collection');
+const { Collection } = require('../../util/Collection');
 const { TypeError } = require('../../errors');
 const Util = require('../../util/Util');
 

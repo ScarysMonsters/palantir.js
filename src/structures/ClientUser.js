@@ -1,7 +1,7 @@
 'use strict';
 
 const { setInterval } = require('node:timers');
-const { Collection } = require('@discordjs/collection');
+const { Collection } = require('../util/Collection');
 const Invite = require('./Invite');
 const User = require('./User');
 const DataResolver = require('../util/DataResolver');

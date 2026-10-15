@@ -1,67 +1,71 @@
 'use strict';
 
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
-const { EventEmitter } = require('events');
-const { spawn } = require('child_process');
-const ffmpeg = require('fluent-ffmpeg');
-const {
-  Streamer,
-  prepareStream,
-  playStream,
-  Encoders,
-} = require('@dank074/discord-video-stream');
+const { EventEmitter } = require('node:events');
+const { spawn } = require('node:child_process');
 const StreamSession = require('./StreamSession');
 const StageChannel = require('../../structures/StageChannel');
 
-if (typeof globalThis.WebSocket === 'undefined') {
-  globalThis.WebSocket = require('ws');
-}
-
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+// Optional peer dependency: advanced WebRTC streaming. Never required by the package itself.
+let streamingLib;
+let streamingLoaded = false;
+function loadStreamingLib() {
+  if (!streamingLoaded) {
+    streamingLoaded = true;
+    try {
+      // eslint-disable-next-line global-require
+      streamingLib = require('@dank074/discord-video-stream');
+    } catch {
+      streamingLib = null;
+    }
+  }
+  if (!streamingLib) {
+    throw new Error(
+      'WebRTC streaming requires the optional `@dank074/discord-video-stream` package (install it manually to enable this feature).',
+    );
+  }
+  return streamingLib;
+}
 
 /* @type {'amf' | 'nvenc' | 'software' | null} */
 let _cachedEncoder = null;
 
+function listEncoders() {
+  return new Promise(resolve => {
+    const proc = spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-encoders'], { windowsHide: true });
+    let output = '';
+    proc.stdout.on('data', data => (output += data.toString()));
+    proc.on('error', () => resolve(''));
+    proc.on('close', () => resolve(output));
+  });
+}
+
+function testEncoder(name) {
+  return new Promise(resolve => {
+    const proc = spawn(
+      'ffmpeg',
+      ['-hide_banner', '-loglevel', 'error', '-f', 'lavfi', '-i', 'color=c=black:s=64x64:d=0.04', '-c:v', name, '-f', 'null', '-'],
+      { windowsHide: true },
+    );
+    proc.on('close', code => resolve(code === 0));
+    proc.on('error', () => resolve(false));
+  });
+}
+
 function detectHwEncoder() {
   if (_cachedEncoder) return Promise.resolve(_cachedEncoder);
-  return new Promise(resolve => {
-    ffmpeg.getAvailableEncoders((err, encoders) => {
-      if (err || !encoders) {
-        _cachedEncoder = 'software';
-        resolve('software');
-        return;
-      }
-      if (encoders.h264_amf) {
-        _cachedEncoder = 'amf';
-        resolve('amf');
-        return;
-      }
-      if (encoders.h264_nvenc) {
-        const proc = spawn('ffmpeg', [
-          '-hide_banner', '-loglevel', 'error',
-          '-f', 'lavfi', '-i', 'color=c=black:s=64x64:d=0.04',
-          '-c:v', 'h264_nvenc', '-f', 'null', '-',
-        ]);
-        proc.on('close', code => {
-          if (code === 0) {
-            _cachedEncoder = 'nvenc';
-            resolve('nvenc');
-          } else {
-            _cachedEncoder = 'software';
-            resolve('software');
-          }
-        });
-        proc.on('error', () => {
-          _cachedEncoder = 'software';
-          resolve('software');
-        });
-        return;
-      }
-      _cachedEncoder = 'software';
-      resolve('software');
-    });
+  return listEncoders().then(async output => {
+    if (output.includes('h264_amf')) {
+      _cachedEncoder = 'amf';
+      return 'amf';
+    }
+    if (output.includes('h264_nvenc') && (await testEncoder('h264_nvenc'))) {
+      _cachedEncoder = 'nvenc';
+      return 'nvenc';
+    }
+    _cachedEncoder = 'software';
+    return 'software';
   });
 }
 
@@ -81,7 +85,7 @@ class WebRtcStreamSession extends EventEmitter {
     super();
     this.client = client;
     this.options = options;
-    this.streamer = new Streamer(client);
+    this.streamer = null;
     this._abort = new AbortController();
     this._ffmpegCommand = null;
     this._playPromise = null;
@@ -100,6 +104,7 @@ class WebRtcStreamSession extends EventEmitter {
 
   async _pickEncoder() {
     const { preset = 'ultrafast', encoder = 'auto' } = this.options;
+    const { Encoders } = loadStreamingLib();
     let mode = encoder;
     if (encoder === 'auto') mode = await detectHwEncoder();
 
@@ -187,6 +192,8 @@ class WebRtcStreamSession extends EventEmitter {
   async _joinVoice() {
     const { guildId, channelId } = this.options;
 
+    if (!this.streamer) this.streamer = new (loadStreamingLib().Streamer)(this.client);
+
     if (this.streamer.voiceConnection) {
       this.streamer.leaveVoice();
       await sleep(1000);
@@ -210,6 +217,7 @@ class WebRtcStreamSession extends EventEmitter {
 
   async _run(url, signal, seekSec = 0) {
     const prepareOpts = await this._buildPrepareOptions(seekSec);
+    const { prepareStream, playStream } = loadStreamingLib();
     const { command, output } = prepareStream(url, prepareOpts, signal);
     this._ffmpegCommand = command;
 
@@ -278,7 +286,7 @@ class WebRtcStreamSession extends EventEmitter {
     this._running = false;
     this._ffmpegCommand?.kill?.('SIGTERM');
     this._ffmpegCommand = null;
-    this.streamer.stopStream();
+    this.streamer?.stopStream();
     this._abort.abort();
     this._abort = new AbortController();
     console.log(`[stream] pause à ${(this._positionMs / 1000).toFixed(1)}s`);
@@ -305,7 +313,7 @@ class WebRtcStreamSession extends EventEmitter {
     this._running = false;
     this._ffmpegCommand?.kill?.('SIGTERM');
     this._ffmpegCommand = null;
-    this.streamer.stopStream();
+    this.streamer?.stopStream();
     this._abort.abort();
     this._abort = new AbortController();
     console.log(`[stream] stop à ${(this._positionMs / 1000).toFixed(1)}s`);
@@ -320,7 +328,7 @@ class WebRtcStreamSession extends EventEmitter {
 
   disconnect() {
     this.stop();
-    if (this._started) this.streamer.leaveVoice();
+    if (this._started) this.streamer?.leaveVoice();
     this._started = false;
   }
 }

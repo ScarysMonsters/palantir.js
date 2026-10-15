@@ -17,9 +17,9 @@ Thanks to mrjvs for discovering how Discord transmits data and the VP8 codec.
 Please use the @dank074/discord-video-stream library for the best support.
 */
 
-const EventEmitter = require('events');
-const { Readable: ReadableStream } = require('stream');
-const prism = require('prism-media');
+const EventEmitter = require('node:events');
+const { Readable: ReadableStream } = require('node:stream');
+const prism = require('../util/Prism');
 const { H264NalSplitter, H265NalSplitter } = require('./processing/AnnexBNalSplitter');
 const { IvfTransformer } = require('./processing/IvfSplitter');
 const { H264Dispatcher } = require('../dispatcher/AnnexBDispatcher');

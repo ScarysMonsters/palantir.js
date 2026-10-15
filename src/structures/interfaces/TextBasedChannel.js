@@ -7,16 +7,15 @@ const { InteractionTypes, ApplicationCommandOptionTypes, Events } = require('../
 const { Error } = require('../../errors');
 const SnowflakeUtil = require('../../util/SnowflakeUtil');
 const { setTimeout } = require('node:timers');
-const { s } = require('@sapphire/shapeshift');
 const Util = require('../../util/Util');
-const validateName = stringName =>
-  s
-    .string()
-    .lengthGreaterThanOrEqual(1)
-    .lengthLessThanOrEqual(32)
-    .regex(/^[\p{Ll}\p{Lm}\p{Lo}\p{N}\p{sc=Devanagari}\p{sc=Thai}_-]+$/u)
-    .setValidationEnabled(true)
-    .parse(stringName);
+const { RangeError } = require('../../errors');
+const NAME_REGEX = /^[\p{Ll}\p{Lm}\p{Lo}\p{N}\p{sc=Devanagari}\p{sc=Thai}_-]+$/u;
+const validateName = stringName => {
+  if (typeof stringName !== 'string' || stringName.length < 1 || stringName.length > 32 || !NAME_REGEX.test(stringName)) {
+    throw new RangeError('INVALID_COMMAND_NAME', [String(stringName)]);
+  }
+  return stringName;
+};
 
 /**
  * Interface for classes that have text-channel-like features.

@@ -1,7 +1,6 @@
 'use strict';
 
-const EventEmitter = require('events');
-const Davey = require('@snazzah/davey');
+const EventEmitter = require('node:events');
 
 const TRANSITION_EXPIRY = 10;
 const TRANSITION_EXPIRY_PENDING_DOWNGRADE = 24;
@@ -9,8 +8,26 @@ const DEFAULT_DECRYPTION_FAILURE_TOLERANCE = 36;
 
 const SILENCE_FRAME = Buffer.from([0xf8, 0xff, 0xfe]);
 
+// Optional peer dependency: native DAVE/E2EE implementation. Never required by the package
+// itself — when absent, DAVE is simply not advertised to Discord and voice works as before.
+let Davey;
+let daveyLoaded = false;
+function loadDavey() {
+  if (!daveyLoaded) {
+    daveyLoaded = true;
+    try {
+      // eslint-disable-next-line global-require
+      Davey = require('@snazzah/davey');
+    } catch {
+      Davey = null;
+    }
+  }
+  return Davey;
+}
+
 function getMaxProtocolVersion() {
-  return Davey.DAVE_PROTOCOL_VERSION ?? 0;
+  const davey = loadDavey();
+  return davey?.DAVE_PROTOCOL_VERSION ?? 0;
 }
 
 class DAVESession extends EventEmitter {
@@ -40,11 +57,16 @@ class DAVESession extends EventEmitter {
 
   reinit() {
     if (this.protocolVersion > 0) {
+      const davey = loadDavey();
+      if (!davey) {
+        this.emit('debug', 'DAVE is unavailable: install the optional `@snazzah/davey` package to enable E2EE voice.');
+        return;
+      }
       if (this.session) {
         this.session.reinit(this.protocolVersion, this.userId, this.channelId);
         this.emit('debug', `Session reinitialized for protocol version ${this.protocolVersion}`);
       } else {
-        this.session = new Davey.DAVESession(this.protocolVersion, this.userId, this.channelId);
+        this.session = new davey.DAVESession(this.protocolVersion, this.userId, this.channelId);
         this.emit('debug', `Session initialized for protocol version ${this.protocolVersion}`);
       }
       this.emit('keyPackage', this.session.getSerializedKeyPackage());
@@ -191,20 +213,22 @@ class DAVESession extends EventEmitter {
 
   encryptVideo(packet, codec = 'H264') {
     if (this.protocolVersion === 0 || !this.session?.ready) return packet;
+    const davey = loadDavey();
+    if (!davey) return packet;
     const codecMap = {
-      H264: Davey.Codec.H264,
-      VP8: Davey.Codec.VP8,
-      H265: Davey.Codec.H265,
-      AV1: Davey.Codec.AV1,
+      H264: davey.Codec.H264,
+      VP8: davey.Codec.VP8,
+      H265: davey.Codec.H265,
+      AV1: davey.Codec.AV1,
     };
-    return this.session.encrypt(Davey.MediaType.VIDEO, codecMap[codec] ?? Davey.Codec.UNKNOWN, packet);
+    return this.session.encrypt(davey.MediaType.VIDEO, codecMap[codec] ?? davey.Codec.UNKNOWN, packet);
   }
 
   decrypt(packet, userId) {
     const canDecrypt = this.session?.ready && (this.protocolVersion !== 0 || this.session?.canPassthrough(userId));
     if (packet.equals(SILENCE_FRAME) || !canDecrypt || !this.session) return packet;
     try {
-      const buffer = this.session.decrypt(userId, Davey.MediaType.AUDIO, packet);
+      const buffer = this.session.decrypt(userId, loadDavey().MediaType.AUDIO, packet);
       this.consecutiveFailures = 0;
       return buffer;
     } catch (error) {

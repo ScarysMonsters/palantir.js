@@ -1,7 +1,7 @@
 'use strict';
 
-const EventEmitter = require('events');
-const prism = require('prism-media');
+const EventEmitter = require('node:events');
+const prism = require('../util/Prism');
 const PacketHandler = require('./PacketHandler');
 const { Error } = require('../../../errors');
 const { PCMInsertSilence } = require('../player/processing/PCMInsertSilence');

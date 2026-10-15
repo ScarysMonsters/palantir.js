@@ -1,7 +1,6 @@
 'use strict';
 
 const { randomUUID } = require('node:crypto');
-const { request } = require('undici');
 const { UserAgent } = require('./Constants');
 
 const FALLBACK_WS_PROPERTIES = {
@@ -49,10 +48,10 @@ function hostVersionToClientVersion(hostVersion) {
 async function fetchClientBuildNumber(releaseChannel = 'stable') {
   try {
     const host = getReleaseHost(releaseChannel);
-    const response = await request(`https://${host}/app`, {
+    const response = await fetch(`https://${host}/app`, {
       headers: { 'User-Agent': UserAgent },
     });
-    const html = await response.body.text();
+    const html = await response.text();
 
     const scriptMatches = [
       ...html.matchAll(/\/assets\/web\.([a-f0-9]+)\.js/g),
@@ -67,10 +66,10 @@ async function fetchClientBuildNumber(releaseChannel = 'stable') {
         : `https://${host}${script.startsWith('/') ? '' : '/'}${script}`;
 
       try {
-        const assetResponse = await request(scriptUrl, {
+        const assetResponse = await fetch(scriptUrl, {
           headers: { 'User-Agent': UserAgent },
         });
-        const source = await assetResponse.body.text();
+        const source = await assetResponse.text();
         const match =
           source.match(/buildNumber["\s:]+["\s]*(\d{5,7})/i) ||
           source.match(/Build Number: (\d+)/i) ||
@@ -91,7 +90,7 @@ async function fetchClientBuildNumber(releaseChannel = 'stable') {
 
 async function fetchDesktopManifest(releaseChannel = 'stable') {
   const installId = randomUUID();
-  const response = await request(
+  const response = await fetch(
     `https://updates.discord.com/distributions/app/manifests/latest?channel=${releaseChannel}&platform=win&arch=x64&install_id=${installId}`,
     {
       headers: {
@@ -100,7 +99,7 @@ async function fetchDesktopManifest(releaseChannel = 'stable') {
     },
   );
 
-  const manifest = JSON.parse(await response.body.text());
+  const manifest = JSON.parse(await response.text());
   const clientVersion = hostVersionToClientVersion(manifest.full?.host_version);
 
   if (!clientVersion) throw new Error('CLIENT_VERSION_NOT_FOUND');

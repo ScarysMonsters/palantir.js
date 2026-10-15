@@ -1,7 +1,5 @@
 'use strict';
 
-const { fetch } = require('undici');
-
 const MaxBitratePerTier = {
   NONE: 64_000,
   TIER_1: 128_000,

@@ -1,6 +1,6 @@
 'use strict';
 
-const EventEmitter = require('events');
+const EventEmitter = require('node:events');
 const { setTimeout, setInterval } = require('node:timers');
 const WebSocket = require('../../../WebSocket');
 const { Error } = require('../../../errors');

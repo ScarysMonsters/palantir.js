@@ -1,9 +1,9 @@
 'use strict';
 
-const EventEmitter = require('events');
+const EventEmitter = require('node:events');
 const { getCiphers } = require('node:crypto');
 const { setTimeout } = require('node:timers');
-const { Collection } = require('@discordjs/collection');
+const { Collection } = require('../../util/Collection');
 const VoiceUDP = require('./networking/VoiceUDPClient');
 const VoiceWebSocket = require('./networking/VoiceWebSocket');
 const MediaPlayer = require('./player/MediaPlayer');

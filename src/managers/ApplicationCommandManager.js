@@ -1,7 +1,6 @@
 'use strict';
 
-const { isJSONEncodable } = require('@discordjs/builders');
-const { Collection } = require('@discordjs/collection');
+const { Collection } = require('../util/Collection');
 const ApplicationCommandPermissionsManager = require('./ApplicationCommandPermissionsManager');
 const CachedManager = require('./CachedManager');
 const { TypeError } = require('../errors');
@@ -220,7 +219,7 @@ class ApplicationCommandManager extends CachedManager {
    * @private
    */
   static transformCommand(command) {
-    if (isJSONEncodable(command)) return command.toJSON();
+    if (typeof command?.toJSON === 'function') return command.toJSON();
 
     let default_member_permissions;
 

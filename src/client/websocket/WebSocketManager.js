@@ -3,8 +3,7 @@
 const EventEmitter = require('node:events');
 const { setImmediate } = require('node:timers');
 const { setTimeout: sleep } = require('node:timers/promises');
-const { Collection } = require('@discordjs/collection');
-const { RPCErrorCodes } = require('discord-api-types/v10');
+const { Collection } = require('../../util/Collection');
 const WebSocketShard = require('./WebSocketShard');
 const PacketHandlers = require('./handlers');
 const { Error } = require('../../errors');
@@ -22,6 +21,12 @@ const BeforeReadyWhitelist = [
 ];
 
 const UNRECOVERABLE_CLOSE_CODES = Object.keys(WSCodes).slice(2).map(Number);
+// Discord RPC error codes used as close codes (https://discord.com/developers/docs/topics/opcodes-and-status-codes#rpc-rpc-error-codes)
+const RPCErrorCodes = {
+  UnknownError: 1000,
+  InvalidPermissions: 4006,
+  InvalidClientId: 4007,
+};
 const UNRESUMABLE_CLOSE_CODES = [
   RPCErrorCodes.UnknownError,
   RPCErrorCodes.InvalidPermissions,

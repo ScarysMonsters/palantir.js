@@ -1,138 +1,205 @@
-
 <div align="center">
   <br />
   <p>
-    <a href="https://discord.js.org"><img src="https://discord.js.org/static/logo.svg" width="546" alt="discord.js" /></a>
+    <img src="docs/logo.svg" width="546" alt="palantir.js" />
   </p>
+  <h1>palantir.js</h1>
+  <p><strong>A lightweight, Bun-native Discord selfbot library.</strong></p>
 </div>
 
 ## About
 
-<strong>Welcome to `djs-selfbot-v13@v3.7`, based on `discord.js@13.17` and backport `discord.js@14.21.0`</strong>
+**palantir.js** is maintained by [ScarysMonsters](https://github.com/ScarysMonsters) and is a fork of
+[`djs-selfbot-v13`](https://github.com/002-sans/djs-selfbot-v13), which is itself a fork of
+[`discord.js-selfbot-v13`](https://github.com/aiko-chan-ai/discord.js-selfbot-v13) by aiko-chan-ai.
 
-- djs-selfbot-v13 is a [Node.js](https://nodejs.org) module that allows user accounts to interact with the Discord API v9.
+Fork chain: `discord.js-selfbot-v13` → `djs-selfbot-v13` → **`palantir.js`**
 
-> [!IMPORTANT]
-> **This project is a fork of the [djs-selfbot-v13](https://github.com/002-sans/djs-selfbot-v13) project.**
+- `discord.js-selfbot-v13` is based on `discord.js@13.17` with a `discord.js@14.21` backport.
+- `palantir.js` keeps that entire API surface and rewrites its runtime on top of Bun/Node builtins.
 
 ---
 
-## Nouveautés
+# What's new in palantir.js (compared to `djs-selfbot-v13`)
 
-Comparé au module original [`djs-selfbot-v13`](https://github.com/002-sans/djs-selfbot-v13), ce fork ajoute de nouvelles classes, managers, méthodes et options. Voici la liste exhaustive.
+This is what **this fork** actually changed. The features added by the parent fork are listed in the
+[next chapter](#what-djs-selfbot-v13-added-compared-to-discordjs-selfbot-v13).
 
-### Nouveaux exports (`src/index.js`)
+### Runtime rewrite: 18 dependencies replaced by Bun/Node builtins
+
+| Upstream dependency | palantir.js replacement |
+| --- | --- |
+| `@discordjs/collection` | `src/util/Collection.js` (full API, `Symbol.species` support) |
+| `@discordjs/builders` | `src/util/Formatters.js` (pure JS) |
+| `@sapphire/async-queue` | `src/util/AsyncQueue.js` |
+| `@sapphire/shapeshift` | native validation in `TextBasedChannel` |
+| `undici` | native `fetch` / `FormData` / `Blob` |
+| `ws` | `src/WebSocket.js` (adapter over the Bun-native `WebSocket`) |
+| `tough-cookie` + `fetch-cookie` | `src/rest/CookieJar.js` |
+| `zlib-sync` | `node:zlib` streaming inflate (`InflateStream`) |
+| `prism-media` | `src/client/voice/util/Prism.js` (FFmpeg spawn, PCM volume, Ogg/WebM demuxers, Opus) |
+| `werift-rtp` | `src/client/voice/util/RtpPacket.js` |
+| `find-process` + `tree-kill` | `src/util/ProcessUtil.js` |
+| `otplib` | `src/util/TOTP.js` (RFC 6238) |
+| `qrcode` | `src/util/QRCode.js` (versions 1-40, EC levels L/M/Q/H) |
+| `fluent-ffmpeg` | direct `ffmpeg` probing via `spawn` |
+| `discord-api-types` | local constants |
+| `erlpack` | not needed (JSON gateway encoding) |
+
+### Bun-first
+
+- Runs on Bun 1.1+ and uses the platform directly: native `fetch`, `WebSocket`, `FormData`, `Blob`,
+  `node:zlib`, `node:crypto` and `node:stream` — no shim layer.
+- The gateway always uses `zlib-stream` compression through `node:zlib` (no native addon required).
+
+### Fast startup: lazy-loaded API
+
+- Every one of the 163 exports in `src/index.js` is resolved lazily on first access.
+- `require('palantir.js')` costs **~6 ms instead of ~330 ms**; the full graph only loads when you
+  actually use `Client` or another export. The export surface is byte-for-byte identical (names,
+  order, types).
+
+### Native TOTP and QR code
+
+- `src/util/TOTP.js` implements RFC 6238 (validated against the official test vectors) and powers
+  `Client` TOTP login (`TOTPKey`) — `otplib` is gone.
+- `src/util/QRCode.js` is a complete encoder (versions 1-40, all EC levels) — `qrcode` is gone.
+  `DiscordAuthWebsocket#generateQR()` still prints the login QR code in the terminal.
+
+### Voice without native addons
+
+- `opusscript` (pure JS) is installed by default and the Opus encoder/decoder is wired to it, so
+  PCM transcoding and `receiver.createStream(..., { mode: 'pcm' })` work out of the box under Bun.
+- Ogg (`opus.OggDemuxer`) and WebM (`opus.WebmDemuxer`) demuxers, the FFmpeg wrapper and the PCM
+  volume transformer are reimplemented in-repo.
+- Raw Opus passthrough (`playOpusStream`) needs no codec engine at all.
+- DAVE/E2EE (`@snazzah/davey`) remains a regular dependency: voice works with Discord's E2EE.
+
+### New gateway option
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `ws.compress` | `true` | Enables the gateway `zlib-stream` compression. Set to `false` to save CPU at the cost of bandwidth |
+
+### Fixes
+
+- `DiscordAuthWebsocket#destroy()` now actually closes the WebSocket (`this.ws` → `this.#ws`).
+- Added the missing `src/structures/InteractionResponse.js`: the whole source tree is loadable.
+- Opus encoder: fixed the `frameSize` argument (opusscript) and the stereo→mono channel mix-up.
+- `Util.uploadFile` converts Node streams for the native `fetch`.
+- REST: the cookie jar persists `Set-Cookie` headers and replays them per domain, path and security.
+
+### Tests and CI
+
+- `bun test` — 23 offline tests: TOTP RFC vectors, QR matrix hashes (validated against a real
+  decoder), gateway compression, REST pipeline, voice primitives and package integrity
+  (lazy exports, no external `require` outside the optional loaders).
+- `bun run test:network` — live gateway (HELLO over `zlib-stream`) + REST tests.
+- GitHub Actions workflow (`ubuntu` + `windows`).
+
+### Dependency policy
+
+| Package | Type | Purpose |
+| --- | --- | --- |
+| `@snazzah/davey` | `dependencies` | Voice E2EE (DAVE/MLS) — native binary, cannot be implemented in JS |
+| `@snazzah/davey-*` | `optionalDependencies` | Platform binaries for DAVE (darwin/linux/win32) |
+| `opusscript` | `optionalDependencies` | Pure-JS Opus codec (no native build) |
+| `@dank074/discord-video-stream` | *not installed* | Optional peer for WebRTC Go Live; loaded lazily only if present |
+
+---
+
+# What `djs-selfbot-v13` added (compared to `discord.js-selfbot-v13`)
+
+> [!NOTE]
+> Everything in this section comes from the **parent fork** and was already present before
+> `palantir.js`. It is translated from the upstream README and kept here for completeness.
+> A few API names are corrected to match this codebase (they differ from the upstream README).
+
+### New exports (`src/index.js`)
 
 | Export | Description |
-|--------|-------------|
-| `QuestManager` | Manager des quêtes Discord |
-| `Quest` | Classe représentant une quête |
-| `BackupManager` | Manager de sauvegarde/restauration de serveurs |
-| `GuildJoinRequestManager` | Manager des demandes d'adhésion aux serveurs |
-| `GuildJoinRequest` | Structure d'une demande d'adhésion |
+| --- | --- |
+| `QuestManager` | Discord quests manager |
+| `Quest` | Class representing a quest |
+| `BackupManager` | Guild backup/restore manager |
+| `GuildJoinRequestManager` | Guild join-request manager |
+| `GuildJoinRequest` | Guild join-request structure |
 
 ---
 
 ### Client (`client.quests`, `client.backups`, `client.developers`)
 
-| Propriété / Méthode | Description |
-|---------------------|-------------|
-| `client.quests` | Instance de `QuestManager` |
-| `client.backups` | Instance de `BackupManager` |
-| `client.developers` | Instance de `DeveloperManager` |
-| `client.startStream(options)` | Rejoint un salon vocal, lance un Go Live WebRTC et lit une vidéo |
-| `client.login()` | Met à jour automatiquement les propriétés client (build number, User-Agent) avant la connexion |
-
-#### `client.startStream(options)` — `StartStreamOptions`
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `guildId` | `Snowflake` | ID du serveur |
-| `channelId` | `Snowflake` | ID du salon vocal |
-| `url` | `string` | URL ou chemin de la vidéo |
-| `fps` | `number` | Images par seconde |
-| `height` | `number` | Hauteur vidéo |
-| `width` | `number` | Largeur vidéo |
-| `bitrate` | `number` | Bitrate vidéo (kbps, défaut: `5000`) |
-| `bitrateMax` | `number` | Bitrate max |
-| `audioBitrate` | `number` | Bitrate audio |
-| `preset` | `string` | Preset x264 |
-| `tune` | `string` | Tune x264 |
-| `audio` | `boolean` | Inclure la piste audio |
-| `video` | `boolean` | Webcam vs screenshare |
-| `livestream` | `boolean` | Mode live source |
-| `downloadHttp` | `boolean` | Télécharger les URLs HTTP localement |
-| `encoder` | `'auto' \| 'amf' \| 'nvenc' \| 'qsv' \| 'software'` | Encodeur vidéo |
-| `hardwareAcceleratedDecoding` | `boolean` | Décodage FFmpeg accéléré |
-| `nvencPreset` | `string` | Preset NVENC (défaut: `'p1'`) |
-| `preEncode` | `boolean` | Pré-encoder avant lecture |
-| `goLive` | `boolean` | Mode WebRTC vs UDP |
+| Property / Method | Description |
+| --- | --- |
+| `client.quests` | `QuestManager` instance |
+| `client.backups` | `BackupManager` instance |
+| `client.developers` | `DeveloperManager` instance |
+| `client.login()` | Automatically refreshes client properties (build number, User-Agent) before connecting |
 
 ---
 
-### Options & propriétés client (`Options`, `ClientProperties`)
+### Client options & properties (`Options`, `ClientProperties`)
 
-| Propriété / Méthode | Description |
-|---------------------|-------------|
-| `Options.fetchClientProperties()` | Récupère les dernières propriétés Discord (build number, version, etc.) |
-| `Options.createDefault().questVoiceChannelId` | Salon vocal par défaut pour les quêtes stream/activité |
-| `ClientProperties.fetchLatest(channel?)` | Scrape Discord web + manifest desktop pour le build actuel |
-| `ClientProperties.awaitLatest(channel?)` | Retourne les propriétés en cache ou les récupère |
-| `ClientProperties.ensureFetched(channel?)` | Lance la récupération en arrière-plan au démarrage |
-| `ClientProperties.createRuntimeProperties(base)` | Génère les propriétés WS avec UUIDs + build info |
-| `ClientProperties.applyCached(properties)` | Applique le build number, version, native build, User-Agent |
-| `ClientProperties.applyToClientOptions(options)` | Met à jour `ws.properties` et `http.headers` au login |
-| `ClientProperties.FALLBACK_WS_PROPERTIES` | Valeurs de repli si la récupération échoue |
+| Property / Method | Description |
+| --- | --- |
+| `Options.fetchClientProperties()` | Fetches the latest Discord properties (build number, version, …) |
+| `Options.createDefault().questVoiceChannelId` | Default voice channel used for stream/activity quests |
+| `ClientProperties.fetchLatest(channel?)` | Scrapes Discord web + desktop manifest for the current build |
+| `ClientProperties.awaitLatest(channel?)` | Returns cached properties or fetches them |
+| `ClientProperties.ensureFetched(channel?)` | Starts background fetching at startup |
+| `ClientProperties.createRuntimeProperties(base)` | Generates WS properties with UUIDs + build info |
+| `ClientProperties.applyCached(properties)` | Applies build number, version, native build, User-Agent |
+| `ClientProperties.applyToClientOptions(options)` | Updates `ws.properties` and `http.headers` on login |
+| `ClientProperties.FALLBACK_WS_PROPERTIES` | Fallback values if fetching fails |
 
 ---
 
-### Quêtes (`client.quests`)
+### Quests (`client.quests`)
 
-#### Classe `Quest`
+#### `Quest` class
 
-| Méthode / Propriété | Description |
-|---------------------|-------------|
-| `id` | ID de la quête |
-| `config` | Configuration de la quête |
-| `userStatus` | Statut utilisateur (progression, enrollment, etc.) |
-| `raw` | Données brutes de l'API |
-| `isExpired(date?)` | La quête est expirée |
-| `isCompleted()` | La quête est terminée |
-| `hasClaimedRewards()` | Les récompenses ont été réclamées |
-| `isEnrolledQuest()` | L'utilisateur est inscrit |
-| `updateUserStatus(status)` | Met à jour le statut en cache |
+| Method / Property | Description |
+| --- | --- |
+| `id` | Quest ID |
+| `config` | Quest configuration |
+| `userStatus` | User status (progress, enrollment, …) |
+| `raw` | Raw API data |
+| `isExpired(date?)` | Whether the quest is expired |
+| `isCompleted()` | Whether the quest is completed |
+| `hasClaimedRewards()` | Whether the rewards were claimed |
+| `isEnrolledQuest()` | Whether the user is enrolled |
+| `updateUserStatus(status)` | Updates the cached status |
 
 #### `QuestManager`
 
-| Méthode / Propriété | Description |
-|---------------------|-------------|
+| Method / Property | Description |
+| --- | --- |
 | `cache` | `Collection<string, Quest>` |
-| `get()` | Récupère toutes les quêtes (`/quests/@me`) |
-| `orbs()` | Solde de monnaie virtuelle (Orbs) |
-| `getQuest(id)` | Quête en cache par ID |
-| `list()` | Toutes les quêtes en cache |
-| `getExpired(date?)` | Quêtes expirées |
-| `getCompleted()` | Quêtes terminées |
-| `getClaimable()` | Quêtes terminées non réclamées |
-| `filterQuestsValid()` | Quêtes non terminées et non expirées |
-| `filterQuestsValidToRedeem()` | Alias pour `getClaimable()` |
-| `hasQuest(id)` | Vérifie si la quête est en cache |
-| `getApplicationData(ids)` | Métadonnées publiques des applications |
-| `acceptQuest(questId, options?)` | S'inscrire à une quête (support Android) |
-| `videoProgress(questId, timestamp, options?)` | Progression vidéo |
-| `heartbeat(questId, appIdOrOptions, terminal?)` | Heartbeat desktop/activité/stream |
-| `redeemQuest(quest)` | Réclamer les récompenses |
-| `doingQuest(quest)` | Auto-compléter une quête |
-| `autoCompleteAll({ redeem? })` | Auto-compléter toutes les quêtes valides |
-| `size` | Taille du cache |
-| `clear()` | Vider le cache |
-| `[Symbol.iterator]()` | Itérer les quêtes en cache |
+| `get()` / `fetchQuests()` | Fetches all quests (`/quests/@me`) |
+| `orbs()` | Virtual currency (Orbs) balance |
+| `getQuest(id)` | Cached quest by ID |
+| `list()` | All cached quests |
+| `getExpired(date?)` | Expired quests |
+| `getCompleted()` | Completed quests |
+| `getClaimable()` | Completed but unclaimed quests |
+| `filterQuestsValid()` | Not completed and not expired quests |
+| `filterQuestsValidToRedeem()` | Alias for `getClaimable()` |
+| `hasQuest(id)` | Whether the quest is cached |
+| `getApplicationData(ids)` | Public application metadata |
+| `acceptQuest(questId, options?)` | Enrolls in a quest (Android support) |
+| `videoProgress(questId, timestamp, options?)` | Video progress |
+| `heartbeat(questId, appIdOrOptions, terminal?)` | Desktop/activity/stream heartbeat |
+| `redeemQuest(quest)` | Claims the rewards |
+| `doingQuest(quest)` | Auto-completes one quest |
+| `autoCompleteAll({ redeem? })` | Auto-completes every valid quest |
+| `size` / `clear()` | Cache size / clear |
+| `[Symbol.iterator]()` | Iterates over cached quests |
 
-**Types de quêtes auto-complétables :**
+**Auto-completable quest types:**
 - `WATCH_VIDEO` / `WATCH_VIDEO_ON_MOBILE`
 - `PLAY_ON_DESKTOP` / `PLAY_ON_XBOX` / `PLAY_ON_PLAYSTATION`
 - `PLAY_ACTIVITY`
-- `STREAM_ON_DESKTOP` *(via voice WS-only)*
+- `STREAM_ON_DESKTOP` *(via WS voice)*
 - `ACHIEVEMENT_IN_ACTIVITY`
 
 ```js
@@ -145,316 +212,342 @@ for (const quest of valid) {
 
 ---
 
-### Sauvegardes (`client.backups`)
+### Backups (`client.backups`)
 
-#### `BackupManager`
+| Method | Description |
+| --- | --- |
+| `create(guildId, options?)` | Creates a guild backup |
+| `load(guildId, backupId, options?)` | Restores a backup |
+| `get(backupId)` | Retrieves a backup (`id`, `data`, `size`) |
+| `list()` | Lists every backup ID |
+| `delete(backupId)` | Deletes a backup |
+| `clearAll()` | Deletes every backup |
 
-| Propriété | Description |
-|-----------|-------------|
-| `cache` | Instance de `BackupCacheManager` |
-
-#### `BackupCacheManager` (`client.backups.cache`)
-
-| Méthode | Description |
-|---------|-------------|
-| `create(guildId, options?)` | Crée une sauvegarde du serveur |
-| `load(guildId, backupId, options?)` | Restaure une sauvegarde |
-| `get(backupId)` | Récupère une sauvegarde (`id`, `data`, `size`) |
-| `list()` | Liste tous les IDs de sauvegarde |
-| `delete(backupId)` | Supprime une sauvegarde |
-| `clearAll()` | Supprime toutes les sauvegardes |
-
-**Options `create` :** `backupID`, `maxMessagesPerChannel`, `doNotBackup`, `backupMembers`, `saveImages`  
-**Options `load` :** `clearGuildBeforeRestore`, `maxMessagesPerChannel`, `doNotBackup`
+**`create` options:** `backupID`, `maxMessagesPerChannel`, `doNotBackup`, `backupMembers`, `saveImages`
+**`load` options:** `clearGuildBeforeRestore`, `maxMessagesPerChannel`, `doNotBackup`
 
 ```js
-const backup = await client.backups.cache.create(guild.id, {
+const backup = await client.backups.create(guild.id, {
   maxMessagesPerChannel: 50,
   backupMembers: true,
 });
-await client.backups.cache.load(guild.id, backup.id);
+await client.backups.load(guild.id, backup.id);
 ```
 
 ---
 
-### Demandes d'adhésion (`guild.demandes`)
+### Join requests (`guild.demandes`)
 
-#### `GuildJoinRequestManager` (`guild.demandes`)
+> The manager is named `demandes` (French) in the parent fork — kept as-is for compatibility.
 
-| Méthode / Propriété | Description |
-|---------------------|-------------|
+| Method / Property | Description |
+| --- | --- |
 | `cache` | `Collection<Snowflake, GuildJoinRequest>` |
-| `resolve(request)` | Résout un resolvable en `GuildJoinRequest` |
-| `resolveId(request)` | Résout en ID string |
+| `resolve(request)` | Resolves a resolvable into a `GuildJoinRequest` |
+| `resolveId(request)` | Resolves into a string ID |
 
 #### `GuildJoinRequest`
 
-| Propriété / Méthode | Description |
-|---------------------|-------------|
-| `id`, `userId`, `user`, `status`, `responses` | Données de la demande |
-| `createdTimestamp`, `createdAt` | Date de création |
-| `approuve()` | Approuver la demande |
-| `reject(reason?)` | Rejeter la demande |
-| `interview()` | Démarrer un entretien |
+| Property / Method | Description |
+| --- | --- |
+| `id`, `userId`, `user`, `status`, `responses` | Request data |
+| `createdTimestamp`, `createdAt` | Creation date |
+| `approuve()` | Approves the request |
+| `reject(reason?)` | Rejects the request |
+| `interview()` | Starts an interview |
 
 #### `Guild`
 
-| Propriété | Description |
-|-----------|-------------|
+| Property | Description |
+| --- | --- |
 | `demandes` | `GuildJoinRequestManager` |
-| `profile` | `{ badge, tag }` — profil/tag du serveur |
+| `profile` | `{ badge, tag }` — guild profile/tag |
 
-**Nouveaux événements :**
-- `guildJoinRequestCreate` — nouvelle ou mise à jour de demande
-- `guildJoinRequestDelete` — demande supprimée
-
----
-
-### Applications développeur (`client.developers`)
-
-| Méthode | Description |
-|---------|-------------|
-| `get(withTeamApplications?)` | Liste les applications possédées |
-| `list(...)` | Alias de `get` |
-| `fetch(applicationId)` | Récupère une application |
-| `edit(applicationId, data)` | Modifie les métadonnées |
-| `setAvatar(applicationId, avatar)` | Change l'icône |
-| `setName(applicationId, name)` | Change le nom |
-| `setDescription(applicationId, description)` | Change la description |
-| `setTags(applicationId, tags)` | Définit les tags (max 5) |
-| `addTag(applicationId, tag)` | Ajoute un tag |
-| `delTag(applicationId, tag)` | Supprime un tag |
-| `enableIntents(applicationId)` | Active les intents privilégiés |
-| `disableIntents(applicationId)` | Désactive les intents privilégiés |
+**Events:**
+- `guildJoinRequestCreate` — new or updated request
+- `guildJoinRequestDelete` — request deleted
 
 ---
 
-### ClientUser (profil utilisateur)
+### Developer applications (`client.developers`)
 
-| Méthode | Description |
-|---------|-------------|
-| `setCustomStatus(options, shardId?)` | Statut personnalisé (texte, emoji, expiration) |
-| `addWidget(type, gameId, comment?, tags?)` | Ajoute un widget profil (jeu en cours / récemment joué) |
-| `delWidget(type, gameId?)` | Supprime un widget |
-| `widgetsList()` | Liste les widgets du profil |
-| `setNameStyle(fontName, effectName, color1, color2?)` | Style du nom (police, effet, dégradé) |
-| `searchTab(options?)` | Recherche dans ses propres messages |
-| `setClan(guild)` | Affiche le tag d'identité d'un serveur |
-| `deleteClan()` | Supprime le tag d'identité |
-| `fetchProfile(userId, options?)` | Profil complet (bio, bannière, badges, amis/guildes mutuels, widgets) |
+| Method | Description |
+| --- | --- |
+| `get(withTeamApplications?)` | Lists owned applications |
+| `list(withTeamApplications?)` | Alias for `get` |
+| `fetch(applicationId)` | Fetches one application |
+| `edit(applicationId, data)` | Edits the metadata |
+| `setAvatar(applicationId, avatar)` | Changes the icon |
+| `setName(applicationId, name)` | Changes the name |
+| `setDescription(applicationId, description)` | Changes the description |
+| `setTags(applicationId, tags)` | Sets tags (max 5) |
+| `addTag(applicationId, tag)` | Adds a tag |
+| `delTag(applicationId, tag)` | Removes a tag |
+| `enableIntents(applicationId)` | Enables privileged intents |
+| `disableIntents(applicationId)` | Disables privileged intents |
 
 ---
 
-### Voice — WS-only (`WsVoiceSession`)
+### ClientUser (user profile)
 
-Connexion vocale **uniquement via le gateway** (sans UDP). Idéal pour les quêtes stream/activité.
+| Method | Description |
+| --- | --- |
+| `addWidget(type, gameId, comment?, tags?)` | Adds a profile widget (playing/recently played) |
+| `delWidget(type, gameId?)` | Removes a widget |
+| `widgetsList()` | Lists profile widgets |
+| `setNameStyle(fontName, effectName, color1, color2?)` | Name style (font, effect, gradient) |
+| `setHypeSquad(type)` | Sets the HypeSquad house (`1`, `'HOUSE_BRAVERY'`, `0` to clear) |
+| `setAboutMe(bio?)` | Sets the profile bio |
+| `searchTab(options?)` | Searches your own messages |
+| `setClan(guild)` | Displays a guild identity tag |
+| `deleteClan()` | Removes the identity tag |
+| `fetchProfile(userId, options?)` | Full profile (bio, banner, badges, mutual friends/guilds, widgets) |
+
+Custom status is managed through the settings manager:
 
 ```js
-const voice = await client.voice.joinWsVoice(channelId, {
+await client.settings.setCustomStatus({ text: 'hello', emoji: '👋', expires: null });
+```
+
+| Method (`client.settings`) | Description |
+| --- | --- |
+| `fetch()` / `edit(data)` | Fetch/update user settings |
+| `setCustomStatus(options)` | Sets the custom status (text, emoji, expiry) |
+| `toggleCompactMode()` | Toggles compact mode |
+| `setTheme(value)` | Sets the theme (`dark`, `light`, `darker`) |
+| `restrictedGuilds` / `addRestrictedGuild` / `removeRestrictedGuild` | Age-restricted guild list management |
+
+---
+
+### Voice — WS-first session (`client.voice.joinVoice`)
+
+Joins a voice channel through the gateway first; the UDP link is only created when media playback
+requires it. Ideal for stream/activity quests.
+
+```js
+const voice = await client.voice.joinVoice(channelId, {
   mute: true,
   deaf: true,
-  video: true,
   stream: true,
 });
 
-await voice.setDeaf(true);
-await voice.setMute(true);
-await voice.setVideo(true);
 await voice.setStream(true);
-await voice.edit({ mute: true, deaf: true, video: false, stream: true });
+await voice.setMute(true);
 await voice.disconnect();
 ```
 
-| Méthode / Propriété | Description |
-|---------------------|-------------|
-| `ClientVoiceManager.joinWsVoice(channel, options?)` | Rejoint un salon via gateway uniquement |
-| `ClientVoiceManager.wsSession` | Session WS active ou `null` |
-| `ClientVoiceManager.preJoinCleanup(channel)` | Nettoie l'état vocal/stream avant join |
-| `ClientVoiceManager.resetVoiceSession(channel)` | Force la déconnexion (récupération erreur 4006) |
-| `ClientVoiceManager.joinChannelWithRetry(channel, config?, maxAttempts?)` | Join avec retry sur session expirée |
-| `WsVoiceSession.streamKey` | Clé de stream Discord |
-| `WsVoiceSession.disconnected` | Session terminée |
-| `WsVoiceSession.setMute(mute?)` | Self mute (op 4) |
-| `WsVoiceSession.setDeaf(deaf?)` | Self deaf (op 4) |
-| `WsVoiceSession.setVideo(video?)` | Caméra on/off (op 4) |
-| `WsVoiceSession.setStream(stream?)` | Go Live on/off (op 18 / 19) |
-| `WsVoiceSession.edit(options)` | Met à jour plusieurs options |
-| `WsVoiceSession.disconnect()` | Quitte le salon + arrête le stream |
+| Method / Property | Description |
+| --- | --- |
+| `ClientVoiceManager.joinVoice(channel, options?)` | Joins a channel (WS-first, UDP on demand) |
+| `ClientVoiceManager.preJoinCleanup(channel)` | Cleans voice/stream state before joining |
+| `ClientVoiceManager.onVoiceServer(payload)` / `onVoiceStateUpdate(payload)` | Gateway voice event handlers |
+| `VoiceSession.streamKey` | Discord stream key (`guild:…` or `call:…`) |
+| `VoiceSession.disconnected` | Whether the session ended |
+| `VoiceSession.setMute(mute?)` | Self mute (op 4) |
+| `VoiceSession.setDeaf(deaf?)` | Self deaf (op 4) |
+| `VoiceSession.setVideo(video?)` | Camera on/off (op 4) |
+| `VoiceSession.setStream(stream?)` | Go Live on/off (op 18 / 19) |
+| `VoiceSession.setStreamLink(link)` / `setVideoLink(link)` | Attaches a stream/video source |
+| `VoiceSession.pauseStream()` / `unpauseStream()` | Pauses/resumes the screenshare (op 22) |
+| `VoiceSession.streamTime(ms)` | Seeks the stream |
+| `VoiceSession.disconnect()` | Leaves the channel + stops the stream |
 
-**Options `joinWsVoice` :** `mute`, `deaf`, `video`, `stream`, `selfMute`, `selfDeaf`, `selfVideo`, `preferredRegion`
+**Helpers exported from `src/client/voice/VoiceSession.js`** (`WsVoiceSession.js` re-exports the same module for compatibility):
+- `getStreamKey(channel, userId)` — `guild:guildId:channelId:userId` or `call:channelId:userId`
+- `normalizeData(options)` — normalises option aliases
+- `waitForSelfVoiceState(client, predicate, timeout?)` — waits for a `VOICE_STATE_UPDATE`
 
-**Utilitaires exportés (`WsVoiceSession.js`) :**
-- `getStreamKey(channel, userId)` — `guild:guildId:channelId:userId` ou `call:channelId:userId`
-- `normalizeOptions(options)` — Normalise les alias d'options
-- `waitForSelfVoiceState(client, predicate, timeout?)` — Attend un `VOICE_STATE_UPDATE`
+**`joinVoice` options** (normalised by `normalizeData`): `mute`, `deaf`, `stream`, `video`,
+`streamLink`, `videoLink`, `preferredRegion`, …
 
 ---
 
 ### Voice — WebRTC Go Live (`WebRtcStreamSession`)
 
-Utilisé par `client.startStream()`. Basé sur `@dank074/discord-video-stream`.
+`src/client/voice/WebRtcStreamSession.js` streams video over WebRTC and is based on the optional
+`@dank074/discord-video-stream` peer (lazy-loaded, not installed by default).
 
-| Méthode / Événement | Description |
-|---------------------|-------------|
-| `start()` | Rejoint le vocal + démarre le stream WebRTC |
-| `pause()` | Met en pause |
-| `resume()` | Reprend |
-| `stop()` | Arrête la lecture |
-| `replay()` | Relit depuis le début |
-| `disconnect()` | Arrête + quitte le vocal |
-| `'playing'`, `'finish'`, `'error'`, `'debug'` | Événements de session |
+| Method / Event | Description |
+| --- | --- |
+| `start()` | Joins voice + starts the WebRTC stream |
+| `pause()` | Pauses |
+| `resume()` | Resumes |
+| `stop()` | Stops playback |
+| `replay()` | Replays from the start |
+| `disconnect()` | Stops + leaves voice |
+| `'playing'`, `'finish'`, `'error'`, `'debug'` | Session events |
 
-Encodeur auto-détecté : `amf` → `nvenc` → `libx264`.
-
----
-
-### Voice — Stream UDP (`StreamSession`)
-
-Session de lecture vidéo via UDP (chemin legacy).
-
-| Méthode | Description |
-|---------|-------------|
-| `StreamSession.resolveUrl(url)` | Télécharge une vidéo HTTP en fichier temporaire |
-| `start()` | Démarre FFmpeg UDP |
-| `pause()` / `resume()` / `stop()` / `replay()` | Contrôle de lecture |
-| `disconnect()` | Arrête + déconnecte voice et stream |
+Encoder is auto-detected: `amf` → `nvenc` → `libx264`.
 
 ---
 
-### Voice — Chiffrement DAVE (`DAVESession`)
+### Voice — UDP stream (`StreamSession`)
 
-Chiffrement end-to-end audio/vidéo Discord via `@snazzah/davey`.
+| Method | Description |
+| --- | --- |
+| `StreamSession.resolveUrl(url)` | Downloads an HTTP video to a temporary file |
+| `start()` | Starts the UDP FFmpeg pipeline |
+| `pause()` / `resume()` / `stop()` / `replay()` | Playback control |
+| `disconnect()` | Stops + disconnects voice and stream |
 
-| Méthode / Propriété | Description |
-|---------------------|-------------|
-| `VoiceConnection.dave` | Instance `DAVESession` |
-| `VoiceConnection.isDaveReady()` | Session DAVE prête |
-| `VoiceConnection.waitForDaveReady()` | Attend que DAVE soit prêt |
+---
+
+### Voice — DAVE encryption (`DAVESession`)
+
+Discord end-to-end audio/video encryption via `@snazzah/davey`.
+
+| Method / Property | Description |
+| --- | --- |
+| `VoiceConnection.dave` | `DAVESession` instance |
+| `VoiceConnection.isDaveReady()` | Whether the DAVE session is ready |
+| `VoiceConnection.waitForDaveReady()` | Waits until DAVE is ready |
 | `VoiceConnection.getStreamSsrcs()` | `{ audioSsrc, videoSsrc, rtxSsrc }` |
-| `VoiceConnection.stopExistingStream()` | Arrête proprement un screenshare actif |
-| `DAVESession.voicePrivacyCode` | Code de confidentialité E2EE |
-| `DAVESession.getVerificationCode(userId)` | Code de vérification par utilisateur |
-| `DAVESession.reinit()` | Réinitialise la session MLS |
-| `DAVESession.setExternalSender(data)` | Configure l'expéditeur externe MLS |
-| `DAVESession.prepareTransition(data)` | Prépare une transition de protocole |
-| `DAVESession.executeTransition(id)` | Exécute une transition |
-| `DAVESession.prepareEpoch(data)` | Prépare une époque |
-| `DAVESession.processProposals(payload, clients)` | Handshake MLS — propositions |
-| `DAVESession.processCommit(payload)` | Handshake MLS — commit |
-| `DAVESession.processWelcome(payload)` | Handshake MLS — welcome |
-| `DAVESession.encrypt(packet)` | Chiffre un paquet audio |
-| `DAVESession.encryptVideo(packet, codec?)` | Chiffre un paquet vidéo |
-| `DAVESession.decrypt(packet, userId)` | Déchiffre un paquet |
-| `DAVESession.destroy()` | Détruit la session |
+| `VoiceConnection.stopExistingStream()` | Gracefully stops an active screenshare |
+| `DAVESession.voicePrivacyCode` | E2EE privacy code |
+| `DAVESession.getVerificationCode(userId)` | Per-user verification code |
+| `DAVESession.reinit()` | Reinitialises the MLS session |
+| `DAVESession.setExternalSender(data)` | Sets the MLS external sender |
+| `DAVESession.prepareTransition(data)` | Prepares a protocol transition |
+| `DAVESession.executeTransition(id)` | Executes a transition |
+| `DAVESession.prepareEpoch(data)` | Prepares an epoch |
+| `DAVESession.processProposals(payload, clients)` | MLS handshake — proposals |
+| `DAVESession.processCommit(payload)` | MLS handshake — commit |
+| `DAVESession.processWelcome(payload)` | MLS handshake — welcome |
+| `DAVESession.encrypt(packet)` | Encrypts an audio packet |
+| `DAVESession.encryptVideo(packet, codec?)` | Encrypts a video packet |
+| `DAVESession.decrypt(packet, userId)` | Decrypts a packet |
+| `DAVESession.destroy()` | Destroys the session |
 
-**Nouveaux opcodes voice (`Constants.VoiceOpcodes`) :** `CLIENTS_CONNECT`, `DAVE_PREPARE_TRANSITION`, `DAVE_EXECUTE_TRANSITION`, `DAVE_TRANSITION_READY`, `DAVE_PREPARE_EPOCH`, `DAVE_MLS_*` (25–31)
+**Voice opcodes (`Constants.VoiceOpcodes`):** `CLIENTS_CONNECT`, `DAVE_PREPARE_TRANSITION`,
+`DAVE_EXECUTE_TRANSITION`, `DAVE_TRANSITION_READY`, `DAVE_PREPARE_EPOCH`, `DAVE_MLS_*` (25–31)
 
 ---
 
-### Voice — Salons vocaux
+### Voice — Voice channels
 
-| Classe | Méthode / Propriété | Description |
-|--------|---------------------|-------------|
-| `BaseGuildVoiceChannel` | `status` | Statut du salon vocal (max 500 caractères) |
-| `BaseGuildVoiceChannel` | `setStatus(status?)` | Définit ou supprime le statut (`PUT /channels/:id/voice-status`) |
-| `VoiceChannel` | `setStatus(status?)` | Hérite de `BaseGuildVoiceChannel` |
-| `StageChannel` | `setStatus(status?)` | Hérite de `BaseGuildVoiceChannel` |
+| Class | Method / Property | Description |
+| --- | --- | --- |
+| `BaseGuildVoiceChannel` | `status` | Voice channel status (max 500 characters) |
+| `BaseGuildVoiceChannel` | `setStatus(status?)` | Sets or clears the status (`PUT /channels/:id/voice-status`) |
+| `VoiceChannel` / `StageChannel` | `setStatus(status?)` | Inherit from `BaseGuildVoiceChannel` |
 
 ```js
 await voiceChannel.setStatus('Hello!');
-await voiceChannel.setStatus(null); // supprimer
+await voiceChannel.setStatus(null); // remove
 ```
 
 ---
 
-### Voice — Améliorations `VoiceConnection`
+### Voice — `VoiceConnection` improvements
 
-| Méthode | Description |
-|---------|-------------|
-| `setVideoStatus(value)` | Envoie le paquet `SOURCES` avec SSRC vidéo/RTX |
-| `sendVoiceStateUpdate(options)` | Définit `flags: 2` quand `self_video` est actif |
-| `checkAuthenticated()` | Vérifie `serverId` quand le protocole DAVE est actif |
-| `cleanup()` | Nettoyage session DAVE / détection session partagée |
-| `createStreamConnection()` | Crée une connexion stream UDP |
-| `joinStreamConnection(user)` | Rejoint le stream d'un utilisateur |
-| `StreamConnection.sendSignalScreenshare()` | Signal Go Live (op 18) |
-| `StreamConnection.sendStopScreenshare()` | Arrêt stream (op 19) |
-| `StreamConnection.sendScreenshareState(paused?)` | Pause/unpause stream (op 22) |
+| Method | Description |
+| --- | --- |
+| `setVideoStatus(value)` | Sends the `SOURCES` packet with video/RTX SSRCs |
+| `sendVoiceStateUpdate(options)` | Sets `flags: 2` when `self_video` is active |
+| `checkAuthenticated()` | Checks `serverId` when the DAVE protocol is active |
+| `cleanup()` | DAVE session cleanup / shared session detection |
+| `createStreamConnection()` | Creates a UDP stream connection |
+| `joinStreamConnection(user)` | Joins a user's stream |
+| `StreamConnection.sendSignalScreenshare()` | Go Live signal (op 18) |
+| `StreamConnection.sendStopScreenshare()` | Stream stop (op 19) |
+| `StreamConnection.sendScreenshareState(paused?)` | Pause/unpause the stream (op 22) |
 
 ---
 
-### Nouvelles dépendances
+## Requirements
 
-| Package | Usage |
-|---------|-------|
-| `@dank074/discord-video-stream` | Go Live WebRTC (`WebRtcStreamSession`, `client.startStream`) |
-| `@snazzah/davey` | Chiffrement DAVE E2EE (`DAVESession`) |
-| `debug` | Logging debug |
+- **Bun ≥ 1.1.0** (developed and tested on Bun; Node.js compatibility is not guaranteed)
+
+## Installation
+
+```sh-session
+bun add palantir.js
+```
+
+## Quick start
+
+```js
+const { Client } = require('palantir.js');
+
+const client = new Client();
+
+client.on('ready', () => {
+  console.log(`${client.user.username} is ready!`);
+});
+
+client.login('token');
+```
+
+QR login is also available (no token needed, scan from the mobile app):
+
+```js
+client.QRLogin();
+```
+
+## Tests
+
+```sh-session
+bun test            # offline suite (native utils, package integrity)
+bun run test:network  # live Discord tests (gateway + REST)
+```
+
+## Documentation
+
+The API reference is generated from the JSDoc comments into `docs/main.json` and rendered by the
+static viewer in `docs/index.html`.
+
+```sh-session
+bun run docs          # regenerate docs/main.json from src/
+bunx serve docs       # preview the site locally (any static server works)
+```
+
+Deploying on Netlify (config already provided in `netlify.toml`, publish directory: `docs`):
+
+1. Push this repository to GitHub.
+2. On [app.netlify.com](https://app.netlify.com): **Add new site → Import an existing project**, pick the repo.
+   The prebuilt docs are static, so no build command is needed.
+3. Or drag-and-drop the `docs/` folder onto [app.netlify.com/drop](https://app.netlify.com/drop) for a one-off deploy.
+4. Netlify can regenerate the docs on every deploy: set the build command to
+   `curl -fsSL https://bun.sh/install | bash && ~/.bun/bin/bun install && ~/.bun/bin/bun run docs`
+   (uncomment it in `netlify.toml`).
 
 ---
 
 <div align="center">
   <p>
-    <a href="https://www.npmjs.com/package/djs-selfbot-v13"><img src="https://img.shields.io/npm/v/djs-selfbot-v13.svg" alt="npm version" /></a>
-    <a href="https://www.npmjs.com/package/djs-selfbot-v13"><img src="https://img.shields.io/npm/dt/djs-selfbot-v13.svg" alt="npm downloads" /></a>
-    <a href="https://github.com/002-sans/djs-selfbot-v13/actions"><img src="https://github.com/002-sans/djs-selfbot-v13/actions/workflows/lint.yml/badge.svg" alt="Tests status" /></a>
+    <a href="https://github.com/ScarysMonsters/palantir.js"><img src="https://img.shields.io/badge/GitHub-ScarysMonsters%2Fpalantir.js-blue" alt="GitHub" /></a>
   </p>
 </div>
 
 > [!WARNING]
-> **I don't take any responsibility for blocked Discord accounts that used this module.**
+> **I do not take any responsibility for blocked Discord accounts that used this module.**
 
 > [!CAUTION]
 > **Using this on a user account is prohibited by the [Discord TOS](https://discord.com/terms) and can lead to the account block.**
 
-### <strong>[Document Website](https://discordjs-self-v13.netlify.app/)</strong>
-
-### <strong>[Example Code](https://github.com/002-sans/djs-selfbot-v13/tree/main/examples)</strong>
-
 ## Features (User)
+
 - [x] Message
-- [x] ClientUser: Status, Activity, RemoteAuth, CustomStatus, Widgets, Clan, Profile, etc.
+- [x] ClientUser: Status, Activity, RemoteAuth/QR login, CustomStatus, Widgets, Clan, Profile, etc.
 - [x] Guild: Fetch Members, Join / Leave, Top emojis, Join Requests, Profile tag, etc.
-- [x] Interactions: Slash Commands, Buttons, Menu, Modal.
+- [x] Interactions: Slash Commands, Buttons, Menu, Modal
 - [x] Quests: Auto-complete (video, desktop, activity, stream, achievement)
-- [x] Voice WS-only: joinWsVoice, setMute, setDeaf, setVideo, setStream
-- [x] Voice WebRTC: client.startStream (Go Live + vidéo)
-- [x] Voice DAVE: Chiffrement E2EE audio/vidéo
-- [x] Backups: Sauvegarde/restauration de serveurs
-- [x] Developer: Gestion des applications bot
+- [x] Voice: WS-first sessions, WebRTC Go Live, UDP stream, DAVE E2EE
+- [x] Backups: guild backup/restore
+- [x] Developer: bot application management
 - [x] VoiceChannel.setStatus
-- [x] ClientProperties: Build number automatique
-- [ ] Captcha & TOTP Handler
-- [ ] Documentation complète
+- [x] ClientProperties: automatic build number
+- [x] Captcha solver hook & native TOTP handler
+- [x] Dependency-light runtime & lazy-loaded API
+- [ ] Complete API documentation
 
-## Installation
+### [Example Code](https://github.com/ScarysMonsters/palantir.js/tree/main/examples)
 
-> [!NOTE]
-> **Node.js 20.18.0 or newer is required**
+## Get Token?
 
-```sh-session
-npm install djs-selfbot-v13@latest
-```
+Based on: [findByProps](https://discord.com/channels/603970300668805120/1085682686607249478/1085682686607249478)
 
-## Example
-
-```js
-const { Client } = require('djs-selfbot-v13');
-const client = new Client();
-
-client.on('ready', async () => {
-  console.log(`${client.user.username} is ready!`);
-})
-
-client.login('token');
-```
-
-
-## Get Token ?
-
-- Based: [findByProps](https://discord.com/channels/603970300668805120/1085682686607249478/1085682686607249478)
-
-<strong>Run code (Discord Console - [Ctrl + Shift + I])</strong>
+<strong>Run this code (Discord Console — [Ctrl + Shift + I])</strong>
 
 ```js
 window.webpackChunkdiscord_app.push([
@@ -481,16 +574,23 @@ console.log(`%cYou now have your token in the clipboard!`, 'font-size: 16px');
 
 ## Contributing
 
-- Before creating an issue, please ensure that it hasn't already been reported/suggested, and double-check the
-[documentation](https://discordjs-self-v13.netlify.app/).  
-- See [the contribution guide](https://github.com/discordjs/discord.js/blob/main/.github/CONTRIBUTING.md) if you'd like to submit a PR.
+- Before creating an issue, please make sure it has not already been reported/suggested.
+- Run `bun test` before opening a PR and keep the zero-require-architecture rule
+  (external `require`s are only allowed in the optional loaders: DAVE, Opus engines and the
+  video-stream peer).
 
 ## Need help?
-Github Discussion: [Here](https://github.com/002-sans/djs-selfbot-v13/discussions)
+
+GitHub Discussions: [ScarysMonsters/palantir.js](https://github.com/ScarysMonsters/palantir.js/discussions)
 
 ## Credits
-- [Discord.js](https://github.com/discordjs/discord.js)
+
+- [discord.js](https://github.com/discordjs/discord.js)
+- [discord.js-selfbot-v13](https://github.com/aiko-chan-ai/discord.js-selfbot-v13) by aiko-chan-ai
+- [djs-selfbot-v13](https://github.com/002-sans/djs-selfbot-v13) by 002-sans
+- [@dank074/Discord-video-stream](https://github.com/dank074/Discord-video-stream) for the video streaming implementation
+- Maintained by [ScarysMonsters](https://github.com/ScarysMonsters)
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=002-sans/djs-selfbot-v13&type=Date)](https://star-history.com/#002-sans/djs-selfbot-v13&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=ScarysMonsters/palantir.js&type=Date)](https://star-history.com/#ScarysMonsters/palantir.js&Date)
