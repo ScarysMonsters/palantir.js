@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T11:33:15.016Z",
+  "generatedAt": "2026-10-15T11:49:31.262Z",
   "sources": {
     "setup": "benchmarks/results/setup.json",
     "local": "benchmarks/results/local.json",
@@ -244,37 +244,39 @@
     "guildId": "1529166705081974808",
     "ok": {
       "palantir": true,
-      "djs-selfbot-v13": false
+      "djs-selfbot-v13": true
     },
     "loginToReadyMs": {
-      "palantir": 10845.95,
-      "djs-selfbot-v13": null,
-      "djsOverPalantir": null
+      "palantir": 1142.57,
+      "djs-selfbot-v13": 1724.49,
+      "djsOverPalantir": 1.51
     },
     "wsPingMs": {
-      "palantir": 277,
-      "djs-selfbot-v13": null,
-      "djsOverPalantir": null
+      "palantir": 278,
+      "djs-selfbot-v13": 275,
+      "djsOverPalantir": 0.99
     },
     "errors": {
       "palantir": [
-        "userFetch: Unauthorized",
-        "messagesFetch: channel.messages.fetch is not a function",
-        "iteration 5: 401: Unauthorized"
+        "iteration 1: Access to sending messages in server channels has been limited for the user",
+        "iteration 2: Access to sending messages in server channels has been limited for the user",
+        "iteration 3: Access to sending messages in server channels has been limited for the user"
       ],
       "djs-selfbot-v13": [
-        "Error [TOKEN_INVALID]: An invalid token was provided.\n    at WebSocketManager.createShards (C:\\Users\\J\\AppData\\Local\\Temp\\opencode\\bench\\djsselfbot\\node_modules\\djs-selfbot-v13\\src\\client\\websocket\\WebSocketManager.js:252:15)\n    at async Client.login (C:\\Users\\J\\AppData\\Local\\Temp\\opencode\\bench\\djsselfbot\\node_modules\\djs-selfbot-v13\\src\\client\\Client.js:314:7)\n    at async worker (C:\\Users\\J\\Documents\\Projects\\package\\palantir.js\\benchmarks\\network.cjs:84:5)"
+        "iteration 1: Access to sending messages in server channels has been limited for the user",
+        "iteration 2: Access to sending messages in server channels has been limited for the user",
+        "iteration 3: Access to sending messages in server channels has been limited for the user"
       ]
     },
     "guildFetch": {
-      "palantir": 0.13,
-      "djs-selfbot-v13": null,
-      "djsOverPalantir": null
+      "palantir": 0.28,
+      "djs-selfbot-v13": 0.22,
+      "djsOverPalantir": 0.79
     },
     "channelsFetch": {
-      "palantir": 421.38,
-      "djs-selfbot-v13": null,
-      "djsOverPalantir": null
+      "palantir": 487.2,
+      "djs-selfbot-v13": 497.53,
+      "djsOverPalantir": 1.02
     },
     "userFetch": {
       "palantir": null,
@@ -282,32 +284,32 @@
       "djsOverPalantir": null
     },
     "messagesFetch": {
+      "palantir": 438.73,
+      "djs-selfbot-v13": 696.33,
+      "djsOverPalantir": 1.59
+    },
+    "send": {
       "palantir": null,
       "djs-selfbot-v13": null,
       "djsOverPalantir": null
     },
-    "send": {
-      "palantir": 624.4,
-      "djs-selfbot-v13": null,
-      "djsOverPalantir": null
-    },
     "edit": {
-      "palantir": 610.2,
+      "palantir": null,
       "djs-selfbot-v13": null,
       "djsOverPalantir": null
     },
     "react": {
-      "palantir": 407.31,
+      "palantir": null,
       "djs-selfbot-v13": null,
       "djsOverPalantir": null
     },
     "unreact": {
-      "palantir": 416.06,
+      "palantir": null,
       "djs-selfbot-v13": null,
       "djsOverPalantir": null
     },
     "delete": {
-      "palantir": 416.07,
+      "palantir": null,
       "djs-selfbot-v13": null,
       "djsOverPalantir": null
     }
