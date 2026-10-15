@@ -5,6 +5,11 @@
   </p>
   <h1>palantir.js</h1>
   <p><strong>A lightweight, Bun-native Discord selfbot library.</strong></p>
+  <p>
+    <a href="https://www.npmjs.com/package/hipalantir"><img src="https://img.shields.io/npm/v/hipalantir.svg" alt="npm version" /></a>
+    <a href="https://www.npmjs.com/package/hipalantir"><img src="https://img.shields.io/npm/dt/hipalantir.svg" alt="npm downloads" /></a>
+    <a href="https://github.com/ScarysMonsters/palantir.js/actions/workflows/test.yml"><img src="https://github.com/ScarysMonsters/palantir.js/actions/workflows/test.yml/badge.svg" alt="Tests" /></a>
+  </p>
 </div>
 
 ## About
@@ -55,7 +60,7 @@ This is what **this fork** actually changed. The features added by the parent fo
 ### Fast startup: lazy-loaded API
 
 - Every one of the 163 exports in `src/index.js` is resolved lazily on first access.
-- `require('palantir.js')` costs **~6 ms instead of ~330 ms**; the full graph only loads when you
+- `require('hipalantir')` costs **~6 ms instead of ~330 ms**; the full graph only loads when you
   actually use `Client` or another export. The export surface is byte-for-byte identical (names,
   order, types).
 
@@ -461,13 +466,13 @@ await voiceChannel.setStatus(null); // remove
 ## Installation
 
 ```sh-session
-bun add palantir.js
+bun add hipalantir
 ```
 
 ## Quick start
 
 ```js
-const { Client } = require('palantir.js');
+const { Client } = require('hipalantir');
 
 const client = new Client();
 

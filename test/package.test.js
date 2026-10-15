@@ -10,7 +10,7 @@ const SRC = path.join(__dirname, '..', 'src');
 describe('package integrity', () => {
   test('package.json has the expected identity and dependency layout', () => {
     const pkg = require('../package.json');
-    expect(pkg.name).toBe('palantir.js');
+    expect(pkg.name).toBe('hipalantir');
     expect(pkg.main).toBe('./src/index.js');
     expect(pkg.engines.bun).toBeDefined();
     // Real dependencies are allowed only for what cannot be implemented in JS.
