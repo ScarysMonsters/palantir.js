@@ -11,6 +11,8 @@ const Messages = {
   TOKEN_INVALID: 'An invalid token was provided.',
   TOKEN_MISSING: 'Request to use token, but token was unavailable to the client.',
   TOTPKEY_MISSING: 'Request to use mfa, but TOTPKey was not set in client options.',
+  PROXY_NOT_SUPPORTED:
+    "A proxy is configured (http: { agent }), but 'http.transport: fetch' only honors it on Bun. Set http: { transport: 'chrome' } or run on Bun — refusing to leak the real IP.",
 
   WS_CLOSE_REQUESTED: 'WebSocket closed due to user request.',
   WS_CONNECTION_EXISTS: 'There is already an existing WebSocket connection.',

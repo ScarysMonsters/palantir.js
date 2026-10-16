@@ -146,6 +146,12 @@ class APIRequest {
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.client.options.restRequestTimeout).unref();
+    const proxy = this._resolveProxy();
+    if (proxyUnsupported(proxy, this.client.options.http.transport)) {
+      clearTimeout(timeout);
+      const { Error: DJSError } = require('../errors');
+      throw new DJSError('PROXY_NOT_SUPPORTED');
+    }
     return this.rest
       .fetch(url, {
         method: this.method.toUpperCase(),
@@ -153,11 +159,25 @@ class APIRequest {
         body,
         signal: controller.signal,
         redirect: 'follow',
-        proxy: this._resolveProxy(),
+        proxy,
         credentials: 'include',
       })
       .finally(() => clearTimeout(timeout));
   }
 }
 
+/**
+ * A configured proxy is only honored through Bun's `fetch` (`proxy` option) or
+ * the Chrome transport (its own `CONNECT` tunneling). Under Node with the
+ * native transport the proxy would be silently ignored and the real IP would
+ * leak — the request must fail instead.
+ * @param {?string} proxyUri Resolved proxy URI, if any
+ * @param {string} transport Configured `http.transport`
+ * @returns {boolean}
+ */
+function proxyUnsupported(proxyUri, transport) {
+  return Boolean(proxyUri) && transport !== 'chrome' && !process.versions.bun;
+}
+
 module.exports = APIRequest;
+module.exports.proxyUnsupported = proxyUnsupported;
