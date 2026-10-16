@@ -29,6 +29,18 @@ async function fileToBlob(source) {
   return new Blob([String(source)]);
 }
 
+/**
+ * Generates a snowflake-shaped string usable as a message nonce, mirroring what
+ * the official client sends. Discord dedupes POSTed messages by nonce, which
+ * makes a network-error retry of a message send idempotent.
+ * @returns {string}
+ */
+function nonce() {
+  return String((BigInt(Date.now() - 1420070400000) << 22n) | BigInt(Math.floor(Math.random() * 4194304)));
+}
+
+const MESSAGE_ROUTE = /^\/channels\/\d+\/messages$/;
+
 class APIRequest {
   constructor(rest, method, path, options) {
     this.rest = rest;
@@ -140,6 +152,17 @@ class APIRequest {
         body = new FormData();
         body.append('payload_json', JSON.stringify(this.options.data));
       } else {
+        /*
+         * Message sends get a nonce (user-provided one preserved) so a retry after a network
+         * error cannot double-post: the API dedupes POSTs carrying the same nonce.
+         */
+        if (
+          this.method === 'post' &&
+          MESSAGE_ROUTE.test(this.path) &&
+          this.options.data && typeof this.options.data === 'object'
+        ) {
+          this.options.data = { ...this.options.data, nonce: this.options.data.nonce ?? nonce() };
+        }
         body = JSON.stringify(this.options.data);
         headers['Content-Type'] = 'application/json';
       }
@@ -182,3 +205,4 @@ function proxyUnsupported(proxyUri, transport) {
 
 module.exports = APIRequest;
 module.exports.proxyUnsupported = proxyUnsupported;
+module.exports.nonce = nonce;

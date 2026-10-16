@@ -321,8 +321,31 @@ class RequestHandler {
 
     // Handle 2xx and 3xx responses
     if (res.ok) {
+      const parsed = await parseResponse(res);
+
+      /*
+       * The API answers 202 with a code starting with 11 to tell the request was queued
+       * server-side instead of completed: retry after retry_after seconds (or 5s)
+       * rather than treat the envelope as a final response.
+       */
+      if (res.status === 202 && parsed?.code != null && String(parsed.code).startsWith('11')) {
+        if (request.retries >= this.manager.client.options.retryLimit) {
+          throw new DiscordAPIError(parsed, res.status, request);
+        }
+
+        const retryAfter = Number(parsed.retry_after ?? 0);
+        const waitMs = retryAfter > 0 ? retryAfter * 1_000 : 5_000;
+        request.retries++;
+        this.manager.client.emit(
+          DEBUG,
+          `[Request Handler] ${res.status} code ${parsed.code}: retrying in ${waitMs}ms (${request.method} ${request.path})`,
+        );
+        await sleep(waitMs);
+        return this.execute(request, captchaKey, captchaToken, captchaSessionId);
+      }
+
       // Nothing wrong with the request, proceed with the next one
-      return parseResponse(res);
+      return parsed;
     }
 
     // Handle 4xx responses

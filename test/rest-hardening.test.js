@@ -184,4 +184,75 @@ describe('P1: rate limit citizenship', () => {
     expect(error.name).toBe('DiscordAPIError');
     expect(error.code).toBe(50035);
   });
+
+  test('a 202 with a code starting with 11 retries on retry_after then fulfils', async () => {
+    const queued = {
+      ok: true,
+      status: 202,
+      statusText: 'Accepted',
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ code: 110020, retry_after: 0.2 }),
+    };
+    const done = {
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ done: 1 }),
+    };
+    let call = 0;
+    const make = async () => (++call === 1 ? queued : done);
+    const handler = makeHandler(make, { retryLimit: 3 });
+    const request = makeRequest(make);
+    const result = await handler.execute(request);
+    expect(result).toEqual({ done: 1 });
+    expect(request.retries).toBe(1);
+
+    // Cap respected: retryLimit 0 rejects immediately
+    let call2 = 0;
+    const make2 = async () => (++call2 === 1 ? queued : ({ ok: true, status: 200, statusText: 'OK', headers: new Headers({ 'content-type': 'application/json' }), json: async () => ({}) }));
+    const handler2 = makeHandler(make2, { retryLimit: 0 });
+    const request2 = makeRequest(make2);
+    const error = await handler2.execute(request2).catch(e => e);
+    expect(error.name).toBe('DiscordAPIError');
+    expect(error.code).toBe(110020);
+    expect(request2.retries).toBe(0);
+  });
+
+  test('message POSTs get a snowflake nonce, user nonce preserved, other routes untouched', async () => {
+    const APIRequest = require('../src/rest/APIRequest.js');
+    const rest = {
+      getAuth: () => 'test-token',
+      client: {
+        listenerCount: () => 0,
+        emit: () => {},
+        options: {
+          http: { api: 'https://discord.com/api', version: 9, transport: 'fetch', headers: { 'User-Agent': 'test' } },
+          ws: { properties: {} },
+          restRequestTimeout: 1000,
+          restTimeOffset: 0,
+        },
+      },
+    };
+
+    const post = (path, data) => {
+      const request = new APIRequest(rest, 'post', path, { route: path, data });
+      let captured;
+      request.rest.fetch = async (url, init) => {
+        captured = init;
+        return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } });
+      };
+      return request.make().then(() => JSON.parse(captured.body));
+    };
+
+    const injected = await post('/channels/123/messages', { content: 'hey' });
+    expect(typeof injected.nonce).toBe('string');
+    expect(injected.nonce).toMatch(/^\d+$/);
+
+    const preserved = await post('/channels/123/messages', { content: 'hey', nonce: 'user-nonce' });
+    expect(preserved.nonce).toBe('user-nonce');
+
+    const untouched = await post('/users/@me/notes', { note: 'note' });
+    expect(untouched.nonce).toBeUndefined();
+  });
 });
