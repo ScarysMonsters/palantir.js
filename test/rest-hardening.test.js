@@ -67,6 +67,11 @@ describe('P1: rate limit citizenship', () => {
     expect(Options.createDefault().rateLimitRetryLimit).toBe(5);
   });
 
+  test('the client self-throttles at the standard 50 req/s global budget by default', () => {
+    const Options = require('../src/util/Options.js');
+    expect(Options.createDefault().restGlobalRateLimit).toBe(50);
+  });
+
   test('backoffFor is bounded, monotonic and jittered', () => {
     const backoffFor = RequestHandler.backoffFor;
     const first = backoffFor(1);
