@@ -66,4 +66,45 @@ describe('P1: rate limit citizenship', () => {
     const Options = require('../src/util/Options.js');
     expect(Options.createDefault().rateLimitRetryLimit).toBe(5);
   });
+
+  test('backoffFor is bounded, monotonic and jittered', () => {
+    const backoffFor = RequestHandler.backoffFor;
+    const first = backoffFor(1);
+    expect(first).toBeGreaterThanOrEqual(500);
+    expect(first).toBeLessThan(750);
+    const second = backoffFor(2);
+    expect(second).toBeGreaterThanOrEqual(1000);
+    expect(second).toBeLessThan(1250);
+    // Bounded regardless of attempt count
+    for (let attempt = 1; attempt <= 12; attempt++) {
+      expect(backoffFor(attempt)).toBeLessThanOrEqual(20_250);
+    }
+  });
+
+  test('a 5xx honours retryLimit and the X-Failed-Requests early-bail', async () => {
+    // Mimic the shape the handler receives: it reads res.constructor.name for the error name
+    const response = {
+      constructor: { name: 'Response' },
+      ok: false,
+      status: 502,
+      statusText: 'Bad Gateway',
+      headers: new Headers(),
+    };
+    const handler = makeHandler(async () => response, { retryLimit: 2 });
+    const request = makeRequest(async () => response);
+    const error = await handler.execute(request).catch(e => e);
+    // Upstream (djs v13) quirk HTTPError keeps: name copies res.constructor.name
+    expect(error.name).toBe('Response');
+    expect(error.constructor.name).toBe('HTTPError');
+    expect(error.code).toBe(502);
+    expect(request.retries).toBe(2);
+
+    const bailed = makeHandler(async () => response, { retryLimit: 5 });
+    response.headers.set('x-failed-requests', '7');
+    const request2 = makeRequest(async () => response);
+    const error2 = await bailed.execute(request2).catch(e => e);
+    expect(error2.message).toContain('X-Failed-Requests');
+    expect(error2.code).toBe(502);
+    expect(request2.retries).toBe(0);
+  });
 });

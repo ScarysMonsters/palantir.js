@@ -22,6 +22,17 @@ const captchaMessage = [
   'sitekey-secret-mismatch',
 ];
 
+/**
+ * Bounded exponential backoff with jitter, in milliseconds. Scaling: 500ms,
+ * 1s, 2s, 4s ... capped at 20s. Used by the 429-without-timing and 5xx retry
+ * paths so neither can hammer the API in a tight loop.
+ * @param {number} attempt Number of retries already consumed (1 = first retry)
+ * @returns {number} Delay to sleep before the next attempt
+ */
+function backoffFor(attempt) {
+  return Math.min(2 ** Math.max(attempt - 1, 0) * 500, 20_000) + Math.floor(Math.random() * 250);
+}
+
 function parseResponse(res) {
   if (res.headers.get('content-type')?.startsWith('application/json')) return res.json();
   return res.arrayBuffer();
@@ -364,7 +375,7 @@ class RequestHandler {
            * a Retry-After and not the full ratelimit header set, and neither may
            * be present): bounded exponential backoff so we do not hammer the route.
            */
-          const backoff = Math.min(2 ** (request.retries - 1) * 500, 20_000) + Math.floor(Math.random() * 250);
+          const backoff = backoffFor(request.retries);
           this.manager.client.emit(
             DEBUG,
             `[Request Handler] No Retry-After on 429, backing off for ${backoff}ms (${request.method} ${request.path})`,
@@ -462,12 +473,32 @@ class RequestHandler {
 
     // Handle 5xx responses
     if (res.status >= 500 && res.status < 600) {
-      // Retry the specified number of times for possible serverside issues
-      if (request.retries === this.manager.client.options.retryLimit) {
+      // Retry the specified number of times for possible serverside issues (502/504/507/522/523/524 demand a backoff)
+      if (request.retries >= this.manager.client.options.retryLimit) {
         throw new HTTPError(res.statusText, res.constructor.name, res.status, request);
       }
 
+      /*
+       * The API surfaces the number of failures in a row on X-Failed-Requests;
+       * when it exceeds the retry limit there is no point waiting or retrying.
+       */
+      const failedRequests = Number(res.headers.get('x-failed-requests') ?? '0');
+      if (failedRequests >= this.manager.client.options.retryLimit) {
+        throw new HTTPError(
+          `${res.status} after ${failedRequests} server failures (X-Failed-Requests)`,
+          res.constructor.name,
+          res.status,
+          request,
+        );
+      }
+
       request.retries++;
+      const backoff = backoffFor(request.retries);
+      this.manager.client.emit(
+        DEBUG,
+        `[Request Handler] Hit a ${res.status}, retrying in ${backoff}ms (${request.method} ${request.path})`,
+      );
+      await sleep(backoff);
       return this.execute(request);
     }
 
@@ -477,6 +508,7 @@ class RequestHandler {
 }
 
 module.exports = RequestHandler;
+module.exports.backoffFor = backoffFor;
 
 /**
  * @external HTTPMethod
