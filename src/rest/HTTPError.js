@@ -1,5 +1,7 @@
 'use strict';
 
+const sanitizeRequestData = require('./Sanitize');
+
 /**
  * Represents an HTTP error from a request.
  * @extends Error
@@ -48,14 +50,12 @@ class HTTPError extends Error {
      */
 
     /**
-     * The data associated with the request that caused this error
+     * The data associated with the request that caused this error, with
+     * secrets (`Authorization`, MFA and captcha headers, token/password
+     * payloads, `auth/*` and `mfa/*` bodies) redacted or dropped
      * @type {HTTPErrorData}
      */
-    this.requestData = {
-      json: request.options.data,
-      files: request.options.files ?? [],
-      headers: request.options.headers,
-    };
+    this.requestData = sanitizeRequestData(request);
   }
 }
 
