@@ -22,6 +22,7 @@ const PresenceManager = require('../managers/PresenceManager');
 const BackupManager = require('../managers/BackupManager');
 const QuestManager = require('../managers/QuestManager');
 const RelationshipManager = require('../managers/RelationshipManager');
+const UserConnectionManager = require('../managers/UserConnectionManager');
 const SessionManager = require('../managers/SessionManager');
 const UserManager = require('../managers/UserManager');
 const UserNoteManager = require('../managers/UserNoteManager');
@@ -155,6 +156,12 @@ class Client extends BaseClient {
      * @type {RelationshipManager}
      */
     this.relationships = new RelationshipManager(this);
+
+    /**
+     * The connected accounts (`twitch`, `steam`, `spotify`, ...) of the current user
+     * @type {UserConnectionManager}
+     */
+    this.connections = new UserConnectionManager(this);
 
     /**
      * Manages the API methods

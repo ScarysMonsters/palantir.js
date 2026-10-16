@@ -156,6 +156,9 @@ const Intents = require('./Intents');
  * @property {string} [invite='https://discord.gg'] Base URL of invites
  * @property {string} [template='https://discord.new'] Base URL of templates
  * @property {Object} [headers] Additional headers to send for all API requests
+ * @property {'fetch'|'chrome'} [transport='fetch'] REST transport to use. `fetch` uses the runtime's native
+ * fetch; `chrome` uses a `node:https` transport that sends Chrome's TLS cipher suites (closer to the
+ * ClientHello of the real client at the cost of speed).
  * @property {string} [scheduledEvent='https://discord.com/events'] Base URL of guild scheduled events
  */
 
@@ -246,6 +249,7 @@ class Options extends null {
         invite: 'https://discord.gg',
         template: 'https://discord.new',
         scheduledEvent: 'https://discord.com/events',
+        transport: 'fetch',
       },
     };
   }

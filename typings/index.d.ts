@@ -870,6 +870,7 @@ export class Client<Ready extends boolean = boolean> extends BaseClient {
   public ws: WebSocketManager;
   public notes: UserNoteManager;
   public relationships: RelationshipManager;
+  public connections: UserConnectionManager;
   public voiceStates: VoiceStateManager;
   public sessions: SessionManager;
   public presences: PresenceManager;
@@ -1082,6 +1083,23 @@ export class ClientUser extends User {
   public setNameStyle(fontName: FontName | number, effectName: EffectName | number, color1: number | string, color2?: number | string | null): Promise<this>;
   public searchTab(options?: UserMessageSearchTabOptions): Promise<{ messages: any[][]; total_results: number }>;
   public fetchProfile(userId: Snowflake, options?: FetchUserProfileOptions): Promise<UserProfile>;
+  public fetchUserAffinities(
+    options?: { v2?: boolean; raw?: boolean },
+  ): Promise<
+    | { [key: string]: unknown }
+    | Array<{
+        user: User | Snowflake;
+        affinity: number | null;
+        dmProbability?: number | null;
+        dmRank?: number | null;
+        vcProbability?: number | null;
+        vcRank?: number | null;
+        serverMessageProbability?: number | null;
+        serverMessageRank?: number | null;
+        communicationProbability?: number | null;
+        communicationRank?: number | null;
+      }>
+  >;
   public spoofDevice(device?: 'desktop' | 'android' | 'iphone' | 'mobile' | 'web' | 'ps5' | 'xbox' | 'vr'): this;
   public setSniper(
     snipeGuild: Guild | Snowflake,
@@ -5209,6 +5227,48 @@ export class UserNoteManager extends BaseManager {
   private _reload(data: { [key: Snowflake]: string }): this;
   public updateNote(id: Snowflake, note: string | null | undefined): Promise<this>;
   public fetch(user: UserResolvable, options?: BaseFetchOptions): Promise<string>;
+}
+
+export interface UserConnectionsEditOptions {
+  friendSync?: boolean;
+  showActivity?: boolean;
+  twoWayLink?: boolean;
+  visibility?: number;
+  metadataVisibility?: number;
+}
+
+export class UserConnection {
+  private constructor(client: Client, data?: unknown);
+  public id: string | null;
+  public type: string | null;
+  public name: string | null;
+  public verified: boolean;
+  public revoked: boolean;
+  public friendSync: boolean;
+  public showActivity: boolean;
+  public twoWayLink: boolean;
+  public visibility: number;
+  public metadataVisibility: number;
+  public metadata: Record<string, unknown> | null;
+  public accessToken: string | null;
+  public integrations: unknown[] | null;
+  public toJSON(): Record<string, unknown>;
+  public toString(): string;
+}
+
+export class UserConnectionManager extends BaseManager {
+  private constructor(client: Client);
+  public cache: Collection<string, UserConnection>;
+  public static keyOf(type: string, id: string): string;
+  public fetch(): Promise<Collection<string, UserConnection>>;
+  public fetchConnection(type: string, id: string): Promise<UserConnection>;
+  public edit(type: string, id: string, options?: UserConnectionsEditOptions): Promise<UserConnection>;
+  public delete(type: string, id: string): Promise<void>;
+  public refresh(type: string, id: string): Promise<Collection<string, UserConnection>>;
+  public buildAccessToken(type: string, id: string): Promise<{ access_token: string }>;
+  public authorizeLink(type: string): Promise<{ url: string }>;
+  public fetchRedditSubscribableSubreddits(id: string): Promise<unknown[]>;
+  public verifyDomain(id: string): Promise<UserConnection>;
 }
 
 export type FetchGuildApplicationCommandFetchOptions = Omit<FetchApplicationCommandOptions, 'guildId'>;

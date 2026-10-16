@@ -848,5 +848,38 @@ class ClientUser extends User {
       legacyUsername: data.legacy_username ?? null,
     };
   }
+
+  /**
+   * Fetches the current user's affinity scores for other users. Affinity scores are a
+   * measure of how likely the user is to be friends with another user.
+   * @param {Object} [options] Options
+   * @param {boolean} [options.v2=false] Fetch the more detailed v2 scores (dm/vc/message probabilities and ranks)
+   * @param {boolean} [options.raw=false] Whether to return the raw API response instead of a
+   * mapped array of `{ user, affinity }` (v2: `{ user, dmProbability, dmRank, vcProbability,
+   * vcRank, serverMessageProbability, serverMessageRank, communicationProbability, communicationRank }`)
+   * @returns {Promise<Object|Array<Object>>}
+   */
+  async fetchUserAffinities({ v2 = false, raw = false } = {}) {
+    const data = v2
+      ? await this.client.api.users['@me'].affinities.v2.users.get()
+      : await this.client.api.users['@me'].affinities.users.get();
+    if (raw) return { ...data };
+    return (data.user_affinities ?? []).map(entry => ({
+      user: this.client.users.cache.get(entry.user_id) ?? entry.user_id,
+      affinity: entry.affinity ?? null,
+      ...(v2
+        ? {
+            dmProbability: entry.dm_probability ?? null,
+            dmRank: entry.dm_rank ?? null,
+            vcProbability: entry.vc_probability ?? null,
+            vcRank: entry.vc_rank ?? null,
+            serverMessageProbability: entry.server_message_probability ?? null,
+            serverMessageRank: entry.server_message_rank ?? null,
+            communicationProbability: entry.communication_probability ?? null,
+            communicationRank: entry.communication_rank ?? null,
+          }
+        : {}),
+    }));
+  }
 }
 module.exports = ClientUser;

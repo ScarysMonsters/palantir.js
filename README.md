@@ -59,7 +59,7 @@ This is what **this fork** actually changed. The features added by the parent fo
 
 ### Fast startup: lazy-loaded API
 
-- Every one of the 165 exports in `src/index.js` is resolved lazily on first access.
+- Every one of the 167 exports in `src/index.js` is resolved lazily on first access.
 - `require('hipalantir')` costs **~6 ms instead of ~330 ms**; the full graph only loads when you
   actually use `Client` or another export. The export surface is byte-for-byte identical (names,
   order, types).
@@ -127,6 +127,48 @@ sniper.on('claimFailed', result => console.error(result.status, result.code));
 - REST: the cookie jar persists `Set-Cookie` headers and replays them per domain, path and security.
 - Gateway: binary frames are decoded as `ArrayBuffer` instead of `Blob`, so `zlib-stream` login works on Node without a DOM.
 - `Guild#_patch` tracks `vanity_url_code`; `DiscordAPIError.rawError` exposes the raw response body (MFA tickets).
+- Gateway compression is **opt-in**: `ws.compress: true` enables `zlib-stream` (default is off,
+  matching Discord's documented default) — plain JSON frames otherwise.
+
+### REST transport with a Chrome TLS fingerprint (`http.transport`)
+
+`node:fetch` sends a Bun ClientHello that fingerprinting middlewares can flag. djs-selfbot solved
+this with an undici TLS `buildConnector`; this fork ports the idea on top of `node:https`:
+
+```js
+const client = new Client({
+  http: {
+    transport: 'chrome', // default: 'fetch' (native)
+  },
+});
+```
+
+- Cipher suites taken from the current Chrome ClientHello (`src/util/Constants.js#exports.ciphers`).
+- Keep-alive HTTP/1.1 agent, `CONNECT` proxy tunnel support, redirect following, gzip/deflate/brotli
+  decompression, multipart files (webhook `payload_json` + attachments) and abort signals — same
+  surface as the native transport.
+- When Bun ships
+  [`fetch` TLS fingerprint options](https://github.com/oven-sh/bun/pull/40275) (`tls.ja3`), the
+  same handshake can be reproduced byte-for-byte through `node:fetch`; the `chrome` transport is a
+  stopgap that already rotates the JA3 away from Bun's default.
+- Verified live: `discord.com/api/gateway` answers 200 through the transport, and
+  `tls.peet.ws` shows a JA3 that now differs from the Bun default.
+
+### Connections and affinities
+
+| Member | Description |
+| --- | --- |
+| `client.connections` | `UserConnectionManager` on `/users/@me/connections` |
+| `client.connections.fetch()` | All connected accounts (Twitch, Steam, Spotify, ...) cached by `type:id` |
+| `client.connections.fetchConnection(type, id)` | One connection |
+| `client.connections.edit(type, id, options)` | Edit visibility / metadata visibility / friend sync / show activity / two-way link |
+| `client.connections.delete(type, id)` | Unlink an account |
+| `client.connections.refresh(type, id)` | Re-pull connection metadata, returns the full refreshed collection |
+| `client.connections.buildAccessToken(type, id)` | Build an OAuth2 access token for the connection |
+| `client.connections.authorizeLink(type)` | Authorization URL for a new connection of that type |
+| `client.connections.fetchRedditSubscribableSubreddits(id)` | Subreddits available for friend sync |
+| `client.connections.verifyDomain(id)` | Verify a domain connection |
+| `client.fetchUserAffinities()` | User affinity scores (`{ user, affinity }`), `v2: true` for dm/vc/message probabilities and ranks |
 
 ### Tests and CI
 
@@ -571,6 +613,8 @@ Deploying on Netlify (config already provided in `netlify.toml`, publish directo
 - [x] Guild: Fetch Members, Join / Leave, Top emojis, Join Requests, Profile tag, etc.
 - [x] Interactions: Slash Commands, Buttons, Menu, Modal
 - [x] Quests: Auto-complete (video, desktop, activity, stream, achievement)
+- [x] Connections: manage Discord connected accounts (fetch/edit/delete/refresh, OAuth tokens)
+- [x] Affinities: user affinity scores (`v1` + `v2`) via `ClientUser#fetchUserAffinities()`
 - [x] Voice: WS-first sessions, WebRTC Go Live, UDP stream, DAVE E2EE
 - [x] Backups: guild backup/restore
 - [x] Developer: bot application management

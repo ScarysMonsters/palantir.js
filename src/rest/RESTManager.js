@@ -6,6 +6,7 @@ const { CookieJar } = require('./CookieJar');
 const APIRequest = require('./APIRequest');
 const routeBuilder = require('./APIRouter');
 const RequestHandler = require('./RequestHandler');
+const ChromeHTTPTransport = require('./ChromeHTTPTransport');
 const { Error } = require('../errors');
 const { Endpoints } = require('../util/Constants');
 
@@ -19,13 +20,17 @@ class RESTManager {
     this.globalReset = null;
     this.globalDelay = null;
     this.cookieJar = new CookieJar();
-    // Cookie-aware fetch built on the native Bun fetch (zero dependency replacement for
-    // `fetch-cookie` + `tough-cookie` + `undici`).
+    // Cookie-aware fetch wrapping either the native fetch or the Chrome-cipher
+    // transport (zero dependency replacement for `fetch-cookie` + `tough-cookie` +
+    // `undici`).
     this.fetch = async (url, options = {}) => {
       const headers = new Headers(options.headers ?? {});
       const cookie = this.cookieJar.getCookieString(url);
       if (cookie) headers.set('cookie', cookie);
-      const response = await fetch(url, { ...options, headers });
+      const response =
+        client.options.http.transport === 'chrome'
+          ? await ChromeHTTPTransport.fetch(url, { ...options, headers })
+          : await fetch(url, { ...options, headers });
       this.cookieJar.storeFromResponse(url, response);
       return response;
     };

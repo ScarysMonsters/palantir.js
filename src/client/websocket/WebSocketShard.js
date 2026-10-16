@@ -295,8 +295,8 @@ class WebSocketShard extends EventEmitter {
 
       const wsQuery = { v: client.options.ws.version };
 
-      // Gateway compression (zlib-stream) can be disabled through `ws.compress: false`.
-      const useCompression = client.options.ws.compress !== false;
+      // Gateway compression (zlib-stream) must be explicitly requested through `ws.compress: true`.
+      const useCompression = client.options.ws.compress === true;
       if (useCompression) {
         this.inflate = new InflateStream();
         wsQuery.compress = 'zlib-stream';
