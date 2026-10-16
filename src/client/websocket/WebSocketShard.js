@@ -11,6 +11,38 @@ const Util = require('../../util/Util');
 const STATUS_KEYS = Object.keys(Status);
 const CONNECTION_STATE = Object.keys(WebSocket.WebSocket);
 
+const REDACTED = '[REDACTED]';
+const SENSITIVE_KEYS = new Set(['token', 'authorization', 'password', 'totp', 'mfa_token']);
+
+/**
+ * Redacts sensitive fields (tokens, authorization, passwords) from a gateway
+ * payload before it is logged, so secrets never reach debug output.
+ * @param {Object} packet The payload about to be logged
+ * @returns {string} JSON string with secret values replaced
+ * @private
+ */
+function redactPacket(packet) {
+  return JSON.stringify(packet, (key, value) =>
+    typeof value === 'string' && SENSITIVE_KEYS.has(key.toLowerCase()) ? REDACTED : value,
+  );
+}
+
+/**
+ * Resolves the gateway proxy URI from `ws.agent`. Supported shapes: a URL
+ * string, a `URL` instance, an undici-style agent (`{uri}`) or a proxy-agent
+ * style harness (`{proxy}`). The native WebSocket adapter only understands a
+ * plain string (`nativeOptions.proxy`), so anything proxy-agent-like without
+ * those fields resolves to `null` (gateway stays direct, unchanged behavior).
+ * @param {*} agent The `ws.agent` option
+ * @returns {?string} The proxy URI, or null for a direct connection
+ * @private
+ */
+function resolveGatewayProxy(agent) {
+  if (Util.verifyProxyAgent(agent)) return agent.proxy ?? agent.uri ?? null;
+  const undici = Util.checkUndiciProxyAgent(agent);
+  return undici ? (undici.uri ?? null) : null;
+}
+
 /**
  * Streaming inflate adapter (gateway `zlib-stream` compression) built on `node:zlib`.
  * Replaces the native `zlib-sync` addon with zero dependencies.
@@ -310,18 +342,19 @@ class WebSocketShard extends EventEmitter {
     Version    : ${client.options.ws.version}
     Encoding   : ${WebSocket.encoding}
     Compression: ${useCompression ? 'zlib-stream' : 'none'}
-    Agent      : ${Util.verifyProxyAgent(client.options.ws.agent)}`,
+    Proxy      : ${gatewayProxy ?? 'none'}`,
       );
 
       this.status = this.status === Status.DISCONNECTED ? Status.RECONNECTING : Status.CONNECTING;
       this.setHelloTimeout();
       this.setWsCloseTimeout(-1);
       this.connectedAt = Date.now();
+      const gatewayProxy = resolveGatewayProxy(client.options.ws.agent);
 
       // Adding a handshake timeout to just make sure no zombie connection appears.
       const ws = (this.connection = WebSocket.create(gateway, wsQuery, {
         handshakeTimeout: 30_000,
-        agent: Util.verifyProxyAgent(client.options.ws.agent) ? client.options.ws.agent : undefined,
+        ...(gatewayProxy ? { proxy: gatewayProxy } : {}),
       }));
       ws.onopen = this.onOpen.bind(this);
       ws.onmessage = this.onMessage.bind(this);
@@ -768,7 +801,7 @@ class WebSocketShard extends EventEmitter {
         gateway_connect_reasons: 'AppSkeleton',
       },
       presence: client.presence ? client.presence._parse(client.options.presence) : undefined,
-      capabilities: client.options.ws.capabilities ?? 30717,
+      capabilities: client.options.ws.capabilities,
       client_state: client.options.ws.client_state ?? { guild_versions: {} },
     };
 
@@ -824,12 +857,12 @@ class WebSocketShard extends EventEmitter {
    */
   _send(data) {
     if (this.connection?.readyState !== WebSocket.OPEN) {
-      this.debug(`Tried to send packet '${JSON.stringify(data)}' but no WebSocket is available!`);
+      this.debug(`Tried to send packet '${redactPacket(data)}' but no WebSocket is available!`);
       this.destroy({ closeCode: 4_000 });
       return;
     }
 
-    this.debug(`[WebSocketShard] send packet '${JSON.stringify(data)}'`);
+    this.debug(`[WebSocketShard] send packet '${redactPacket(data)}'`);
     this.connection.send(WebSocket.pack(data), err => {
       if (err) this.manager.client.emit(Events.SHARD_ERROR, err, this.id);
     });
@@ -962,3 +995,5 @@ class WebSocketShard extends EventEmitter {
 }
 
 module.exports = WebSocketShard;
+module.exports.redactPacket = redactPacket;
+module.exports.resolveGatewayProxy = resolveGatewayProxy;
