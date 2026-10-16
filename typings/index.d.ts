@@ -6821,6 +6821,7 @@ export interface ClientOptions {
   restGlobalRateLimit?: number;
   restSweepInterval?: number;
   retryLimit?: number;
+  rateLimitRetryLimit?: number;
   failIfNotExists?: boolean;
   presence?: PresenceData;
   waitGuildTimeout?: number;

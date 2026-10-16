@@ -318,6 +318,16 @@ class RequestHandler {
     if (res.status >= 400 && res.status < 500) {
       // Handle ratelimited requests
       if (res.status === 429) {
+        const rateLimitRetryLimit = this.manager.client.options.rateLimitRetryLimit ?? 5;
+        // A durable 429 otherwise loops forever: bound the consecutive retries
+        if (request.retries >= rateLimitRetryLimit) {
+          throw new HTTPError(
+            `Rate limited more than ${rateLimitRetryLimit} consecutive times on ${request.route}`,
+            'RateLimitError',
+            429,
+            request,
+          );
+        }
         const isGlobal = this.globalLimited;
         let limit, timeout;
         if (isGlobal) {
@@ -344,9 +354,22 @@ class RequestHandler {
 
         await this.onRateLimit(request, limit, timeout, isGlobal);
 
+        request.retries++;
         // If caused by a sublimit, wait it out here so other requests on the route can be handled
         if (sublimitTimeout) {
           await sleep(sublimitTimeout);
+        } else if (!isGlobal && !this.localLimited) {
+          /*
+           * No authoritative timing on this 429 (user tokens are often only sent
+           * a Retry-After and not the full ratelimit header set, and neither may
+           * be present): bounded exponential backoff so we do not hammer the route.
+           */
+          const backoff = Math.min(2 ** (request.retries - 1) * 500, 20_000) + Math.floor(Math.random() * 250);
+          this.manager.client.emit(
+            DEBUG,
+            `[Request Handler] No Retry-After on 429, backing off for ${backoff}ms (${request.method} ${request.path})`,
+          );
+          await sleep(backoff);
         }
         return this.execute(request);
       }

@@ -99,6 +99,8 @@ const Intents = require('./Intents');
  * {@link RateLimitError} will be thrown. Otherwise the request will be queued for later
  * @property {number} [retryLimit=1] How many times to retry on 5XX errors
  * (Infinity for an indefinite amount of retries)
+ * @property {number} [rateLimitRetryLimit=5] Maximum consecutive retries while a route keeps answering 429
+ * (a durable rate limit otherwise loops forever; exceeding this throws {@link HTTPError})
  * @property {boolean} [failIfNotExists=true] Default value for {@link ReplyMessageOptions#failIfNotExists}
  * @property {PresenceData} [presence={ status: 'online', since: 0, activities: [], afk: false }] Presence data to use upon login
  * @property {number} [waitGuildTimeout=15_000] Time in milliseconds that Clients with the GUILDS intent should wait for
@@ -206,6 +208,7 @@ class Options extends null {
       restRequestTimeout: 15_000,
       restGlobalRateLimit: 0,
       retryLimit: 1,
+      rateLimitRetryLimit: 5,
       restTimeOffset: 500,
       restSweepInterval: 60,
       failIfNotExists: true,
