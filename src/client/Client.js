@@ -300,10 +300,7 @@ class Client extends BaseClient {
     );
     this.emit(
       Events.DEBUG,
-      `Provided token: ${token
-        .split('.')
-        .map((val, i) => (i > 1 ? val.replace(/./g, '*') : val))
-        .join('.')}`,
+      `Provided token: ${token.length > 4 ? `${'*'.repeat(Math.max(1, token.length - 4))}${token.slice(-4)}` : '[REDACTED]'}`,
     );
 
     if (this.options.presence) {
