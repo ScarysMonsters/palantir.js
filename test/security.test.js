@@ -105,4 +105,16 @@ describe('P0: secret redaction', () => {
     expect(headers['User-Agent']).toBe('palantir');
     expect(json).toBeNull();
   });
+
+  test('getAuth strips only the Bot/Bearer prefix, never mid-token "Bot "s', () => {
+    const RESTManager = require('../src/rest/RESTManager.js');
+    const botToken = RESTManager.prototype.getAuth.call({ client: { token: 'Bot userSecretToken abc' } });
+    expect(botToken).toBe('userSecretToken abc');
+
+    const bearerToken = RESTManager.prototype.getAuth.call({ client: { accessToken: 'BEARER userSecretToken abc' } });
+    expect(bearerToken).toBe('userSecretToken abc');
+
+    const userToken = RESTManager.prototype.getAuth.call({ client: { token: 'userSecretToken abc' } });
+    expect(userToken).toBe('userSecretToken abc');
+  });
 });
