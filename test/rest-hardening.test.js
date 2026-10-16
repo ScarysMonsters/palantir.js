@@ -107,4 +107,81 @@ describe('P1: rate limit citizenship', () => {
     expect(error2.code).toBe(502);
     expect(request2.retries).toBe(0);
   });
+
+  test('a 400 captcha is solved, retried with rqtoken and session id, rqdata forwarded', async () => {
+    const solverArgs = [];
+    const makeCalls = [];
+    const captchaData = {
+      captcha_service: 'hcaptcha',
+      captcha_key: ['invalid-input-response'],
+      captcha_sitekey: 'site-key',
+      captcha_rqtoken: 'rq-token',
+      captcha_rqdata: 'rq-data',
+      captcha_session_id: 'session-id',
+    };
+    const captchaResponse = {
+      ok: false,
+      status: 400,
+      statusText: 'Bad Request',
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => captchaData,
+    };
+    const okResponse = {
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ message: 'OK' }),
+    };
+    const handler = makeHandler(
+      async () => {},
+      {
+        captchaSolver: async data => {
+          solverArgs.push(data);
+          return 'solved-key';
+        },
+      },
+    );
+    const request = makeRequest((captchaKey, rqToken, sessionId) => {
+      makeCalls.push([captchaKey, rqToken, sessionId]);
+      return makeCalls.length === 1 ? captchaResponse : okResponse;
+    });
+    request.fullUserAgent = 'test-agent/1.0';
+
+    const result = await handler.execute(request);
+    expect(result).toEqual({ message: 'OK' });
+    expect(request.retries).toBe(1);
+    expect(solverArgs.length).toBe(1);
+    // rqdata is passed through to the solver
+    expect(solverArgs[0].captcha_rqdata).toBe('rq-data');
+    // Retry carries the solved key, the rqtoken and the session id
+    expect(makeCalls[1]).toEqual(['solved-key', 'rq-token', 'session-id']);
+  });
+
+  test('a 400 with captcha_service but no captcha_key array does not crash nor trigger the solver', async () => {
+    const solverArgs = [];
+    const response = {
+      ok: false,
+      status: 400,
+      statusText: 'Bad Request',
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ captcha_service: 'hcaptcha', message: 'bad', code: 50035 }),
+    };
+    const handler = makeHandler(
+      async () => response,
+      {
+        captchaSolver: async data => {
+          solverArgs.push(data);
+          return 'should-not-happen';
+        },
+        captchaRetryLimit: 3,
+      },
+    );
+    const request = makeRequest(async () => response);
+    const error = await handler.execute(request).catch(e => e);
+    expect(solverArgs.length).toBe(0);
+    expect(request.retries).toBe(0);
+    expect(error.name).toBe('DiscordAPIError');
+    expect(error.code).toBe(50035);
+  });
 });

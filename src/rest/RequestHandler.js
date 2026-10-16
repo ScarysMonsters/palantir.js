@@ -126,7 +126,7 @@ class RequestHandler {
     }
   }
 
-  async execute(request, captchaKey, captchaToken) {
+  async execute(request, captchaKey, captchaToken, captchaSessionId) {
     /*
      * After calculations have been done, pre-emptively stop further requests
      * Potentially loop until this task can run if e.g. the global rate limit is hit twice
@@ -217,7 +217,7 @@ class RequestHandler {
     // Perform the request
     let res;
     try {
-      res = await request.make(captchaKey, captchaToken);
+      res = await request.make(captchaKey, captchaToken, captchaSessionId);
     } catch (error) {
       // Retry the specified number of times for request abortions
       if (request.retries === this.manager.client.options.retryLimit) {
@@ -394,17 +394,18 @@ class RequestHandler {
           data?.captcha_service &&
           typeof this.manager.client.options.captchaSolver == 'function' &&
           request.retries < this.manager.client.options.captchaRetryLimit &&
-          captchaMessage.some(s => data.captcha_key[0].includes(s))
+          Array.isArray(data.captcha_key) &&
+          data.captcha_key.some(s => typeof s === 'string' && captchaMessage.some(m => s.includes(m)))
         ) {
           // Retry the request after a captcha is solved
           this.manager.client.emit(
             DEBUG,
-            `[Request Handler] Hit a captcha while executing a request (${data.captcha_key.join(', ')})
+            `[Request Handler] Hit a captcha while executing a request (${Array.isArray(data.captcha_key) ? data.captcha_key.join(', ') : 'unknown'})
     Method  : ${request.method}
     Path    : ${request.path}
     Route   : ${request.route}
     Sitekey : ${data.captcha_sitekey}
-    rqToken : ${data.captcha_rqtoken}`,
+    rqToken : ${data.captcha_rqtoken ? 'present' : 'absent'}`,
           );
           const captcha = await this.manager.client.options.captchaSolver(data, request.fullUserAgent);
           this.manager.client.emit(
@@ -413,11 +414,11 @@ class RequestHandler {
     Method  : ${request.method}
     Path    : ${request.path}
     Route   : ${request.route}
-    Key     : ${captcha ? `${captcha.slice(0, 120)}...` : '[Captcha not solved]'}
-    rqToken : ${data.captcha_rqtoken}`,
+    Key     : ${captcha ? `[SOLVED] (length ${captcha.length})` : '[Captcha not solved]'}
+    rqToken : ${data.captcha_rqtoken ? 'present' : 'absent'}`,
           );
           request.retries++;
-          return this.execute(request, captcha, data.captcha_rqtoken);
+          return this.execute(request, captcha, data.captcha_rqtoken, data.captcha_session_id);
         }
         // Two factor handling
         if (data?.code && data.code == 60003 && request.options.auth !== false && request.retries < 1) {
@@ -448,7 +449,7 @@ class RequestHandler {
     Method  : ${request.method}
     Path    : ${request.path}
     Route   : ${request.route}
-    mfaCode : ${otp}`,
+    mfaCode : [TOTP_CODE] (not logged)`,
             );
             // Get ticket
             const mfaData = data.mfa;

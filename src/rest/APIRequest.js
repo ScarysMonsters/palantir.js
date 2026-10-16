@@ -57,7 +57,7 @@ class APIRequest {
     return data.uri;
   }
 
-  async make(captchaKey, captchaRqToken) {
+  async make(captchaKey, captchaRqToken, captchaSessionId) {
     const API =
       this.options.versioned === false
         ? this.client.options.http.api
@@ -114,6 +114,7 @@ class APIRequest {
     // Captcha
     if (captchaKey && typeof captchaKey == 'string') headers['X-Captcha-Key'] = captchaKey;
     if (captchaRqToken && typeof captchaRqToken == 'string') headers['X-Captcha-Rqtoken'] = captchaRqToken;
+    if (captchaSessionId && typeof captchaSessionId == 'string') headers['X-Captcha-Session-Id'] = captchaSessionId;
 
     let body;
     if (this.options.files?.length) {
