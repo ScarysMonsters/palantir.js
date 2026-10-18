@@ -304,8 +304,13 @@ class RequestHandler {
       }
     }
 
-    // Count the invalid requests
-    if (res.status === 401 || res.status === 403 || res.status === 429) {
+    // Count the invalid requests, except 429s scoped `shared` which Discord does
+    // not count against the 10k/10min invalid-request limit
+    const countsAsInvalid =
+      res.status === 401 ||
+      res.status === 403 ||
+      (res.status === 429 && res.headers.get('x-ratelimit-scope') !== 'shared');
+    if (countsAsInvalid) {
       if (!invalidCountResetTime || invalidCountResetTime < Date.now()) {
         invalidCountResetTime = Date.now() + 1_000 * 60 * 10;
         invalidCount = 0;

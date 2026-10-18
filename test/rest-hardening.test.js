@@ -306,6 +306,33 @@ describe('P1: rate limit citizenship', () => {
   });
 });
 
+describe('P1: invalid request accounting', () => {
+  test('429s scoped shared are not counted as invalid requests', async () => {
+    const events = [];
+    const response = scope => ({
+      ok: false,
+      status: 429,
+      statusText: 'Too Many Requests',
+      headers: new Headers(scope ? { 'x-ratelimit-scope': scope } : {}),
+      arrayBuffer: async () => new ArrayBuffer(0),
+      text: async () => '',
+      json: async () => ({}),
+    });
+    const handler = makeHandler(async () => {}, { rateLimitRetryLimit: 0, invalidRequestWarningInterval: 1 });
+    handler.manager.client.listenerCount = event => (event === 'invalidRequestWarning' ? 1 : 0);
+    handler.manager.client.emit = (event, data) => events.push([event, data]);
+
+    // Shared-scope 429: counts as nothing
+    await handler.execute(makeRequest(async () => response('shared'))).catch(() => {});
+    expect(events.length).toBe(0);
+
+    // Plain 429: counted (rateLimitRetryLimit 0 makes the retry cap throw immediately)
+    await handler.execute(makeRequest(async () => response())).catch(() => {});
+    expect(events.length).toBe(1);
+    expect(events[0][0]).toBe('invalidRequestWarning');
+  });
+});
+
 describe('P1: request retry bounding', () => {
   test('a make() error is bounded even when options.retryLimit is not set', async () => {
     const handler = makeHandler(async () => {});
