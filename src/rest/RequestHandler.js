@@ -4,10 +4,11 @@ const { setTimeout } = require('node:timers');
 const { setTimeout: sleep } = require('node:timers/promises');
 const { AsyncQueue } = require('../util/AsyncQueue');
 const DiscordAPIError = require('./DiscordAPIError');
+const CloudflareBanError = require('./CloudflareBanError');
 const HTTPError = require('./HTTPError');
 const RateLimitError = require('./RateLimitError');
 const {
-  Events: { DEBUG, RATE_LIMIT, INVALID_REQUEST_WARNING, API_RESPONSE, API_REQUEST },
+  Events: { DEBUG, CLOUDFLARE_BAN, RATE_LIMIT, INVALID_REQUEST_WARNING, API_RESPONSE, API_REQUEST },
 } = require('../util/Constants');
 
 const captchaMessage = [
@@ -512,6 +513,25 @@ class RequestHandler {
         }
       } catch (err) {
         throw new HTTPError(err.message, err.constructor.name, err.status, request);
+      }
+
+      /*
+       * A Cloudflare block (HTTP 403 carrying code 40333) never reaches the API:
+       * expose it as its own error and notify listeners so applications can pause
+       * instead of treating it as a permission error and hammering on.
+       */
+      if (res.status === 403 && data?.code === 40333) {
+        const cloudflareError = new CloudflareBanError(data, res.status, request);
+
+        /**
+         * Emitted when a request was blocked by Cloudflare (HTTP 403, code `40333`).
+         * The block is tied to the IP address or user agent, not the account; pause
+         * sending requests until it lifts.
+         * @event BaseClient#cloudflareBan
+         * @param {CloudflareBanError} error The error thrown for the blocked request
+         */
+        this.manager.client.emit(CLOUDFLARE_BAN, cloudflareError);
+        throw cloudflareError;
       }
 
       throw new DiscordAPIError(data, res.status, request);

@@ -333,6 +333,41 @@ describe('P1: invalid request accounting', () => {
   });
 });
 
+describe('P1: cloudflare blocking', () => {
+  test('a Cloudflare block throws CloudflareBanError and emits cloudflareBan', async () => {
+    const events = [];
+    const response = {
+      ok: false,
+      status: 403,
+      statusText: 'Forbidden',
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ message: 'internal network error', code: 40333 }),
+    };
+    const handler = makeHandler(async () => {});
+    handler.manager.client.emit = (event, data) => events.push([event, data]);
+    const request = makeRequest(async () => response, {
+      method: 'post',
+      path: '/channels/1/messages',
+      route: '/channels/1/messages',
+    });
+
+    const error = await handler.execute(request).catch(e => e);
+    const DiscordAPIError = require('../src/rest/DiscordAPIError.js');
+    const CloudflareBanError = require('../src/rest/CloudflareBanError.js');
+    expect(error).toBeInstanceOf(CloudflareBanError);
+    expect(error).toBeInstanceOf(DiscordAPIError);
+    expect(error.name).toBe('CloudflareBanError');
+    expect(error.code).toBe(40333);
+    expect(error.httpStatus).toBe(403);
+    expect(error.isBlockedByCloudflare).toBe(true);
+    expect(error.method).toBe('post');
+    expect(error.path).toBe('/channels/1/messages');
+    expect(events.length).toBe(1);
+    expect(events[0][0]).toBe('cloudflareBan');
+    expect(events[0][1]).toBe(error);
+  });
+});
+
 describe('P1: request retry bounding', () => {
   test('a make() error is bounded even when options.retryLimit is not set', async () => {
     const handler = makeHandler(async () => {});

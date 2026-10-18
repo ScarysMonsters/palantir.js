@@ -1766,6 +1766,19 @@ export class DiscordAPIError extends Error {
   public readonly isBlockedByCloudflare: boolean;
 }
 
+export class CloudflareBanError extends Error {
+  private constructor(error: unknown, status: number, request: unknown);
+  public name: 'CloudflareBanError';
+  public code: number;
+  public method: string;
+  public path: string;
+  public httpStatus: number;
+  public requestData: HTTPErrorData;
+  public retries: number;
+  public captcha: Captcha | null;
+  public readonly isBlockedByCloudflare: true;
+}
+
 export interface Captcha {
   captcha_key: string[];
   captcha_sitekey: string;
@@ -6654,6 +6667,7 @@ export interface BaseClientEvents {
   debug: [message: string];
   rateLimit: [rateLimitData: RateLimitData];
   invalidRequestWarning: [invalidRequestWarningData: InvalidRequestWarningData];
+  cloudflareBan: [error: CloudflareBanError];
 }
 
 export interface ClientEvents extends BaseClientEvents {
@@ -6999,6 +7013,7 @@ export interface ConstantsEvents {
   INVALID_REQUEST_WARNING: 'invalidRequestWarning';
   API_RESPONSE: 'apiResponse';
   API_REQUEST: 'apiRequest';
+  CLOUDFLARE_BAN: 'cloudflareBan';
   CLIENT_READY: 'ready';
   /** @deprecated See [this issue](https://github.com/discord/discord-api-docs/issues/3690) for more information. */
   APPLICATION_COMMAND_CREATE: 'applicationCommandCreate';
