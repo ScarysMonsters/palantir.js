@@ -2483,6 +2483,7 @@ export class Invite extends Base {
   public stageInstance: InviteStageInstance | null;
   public guildScheduledEvent: GuildScheduledEvent | null;
   public flags: Readonly<InviteFlags>;
+  public showVerificationForm: boolean;
 }
 
 export class InviteStageInstance extends Base {

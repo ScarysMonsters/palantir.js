@@ -253,6 +253,12 @@ class Invite extends Base {
     } else {
       this.flags ??= new InviteFlags().freeze();
     }
+
+    /**
+     * Whether the user should be shown the guild's member verification form
+     * @type {boolean}
+     */
+    this.showVerificationForm = data.show_verification_form ?? false;
   }
 
   /**
