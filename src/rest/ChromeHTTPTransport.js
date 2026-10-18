@@ -140,7 +140,7 @@ function decompressBody(body, encoding) {
  * Establishes a TLS tunnel through an HTTP `CONNECT` proxy.
  * @param {URL} proxyUrl
  * @param {string} host Target host and port, formatted `host:port`
- * @returns {Promise<import('net').Socket>}
+ * @returns {Promise<Socket>}
  */
 function proxyConnect(proxyUrl, host) {
   return new Promise((resolve, reject) => {
@@ -207,7 +207,7 @@ function abortError() {
  * Performs a single HTTP request (no redirects) and returns a buffered response.
  * @param {URL} url
  * @param {Object} options
- * @param {?import('net').Socket} [socket] An established connected socket (proxy tunnel)
+ * @param {?Socket} [socket] An established connected socket (proxy tunnel)
  * @returns {Promise<ChromeResponse>}
  */
 function requestOnce(url, options, socket = null) {
@@ -364,5 +364,10 @@ async function fetch(url, options = {}) {
     transportSocket?.destroy();
   }
 }
+
+/**
+ * @external Socket
+ * @see {@link https://nodejs.org/api/net.html#class-netsocket}
+ */
 
 module.exports = { fetch, ChromeResponse };

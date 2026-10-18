@@ -15,17 +15,11 @@ class UserConnectionManager extends BaseManager {
   constructor(client) {
     super(client);
     /**
-     * The cache of this manager
+     * The cache of this manager, indexed by `type:id`
      * @type {Collection<string, UserConnection>}
      */
     this.cache = new Collection();
   }
-
-  /**
-   * The cache of this manager indexed by `type:id`
-   * @type {Collection<string, UserConnection>}
-   * @name UserConnectionManager#cache
-   */
 
   /**
    * Gets the cache key for a connection

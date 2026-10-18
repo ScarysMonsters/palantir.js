@@ -1289,9 +1289,10 @@ class StreamConnection extends VoiceConnection {
   }
 
   /**
-   * Stop screenshare, delete this connection (WS)
+   * Stop screenshare, delete this connection (WS).
+   * Internal: use StreamConnection#disconnect().
    * @returns {void}
-   * @private Using StreamConnection#disconnect()
+   * @private
    */
   sendStopScreenshare() {
     this.#requestDisconnect = true;
@@ -1446,9 +1447,10 @@ class StreamConnectionReadonly extends VoiceConnection {
   }
 
   /**
-   * Stop screenshare, delete this connection (WS)
+   * Stop screenshare, delete this connection (WS).
+   * Internal: use StreamConnection#disconnect().
    * @returns {void}
-   * @private Using StreamConnection#disconnect()
+   * @private
    */
   sendStopScreenshare() {
     this.#requestDisconnect = true;
