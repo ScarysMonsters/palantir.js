@@ -221,7 +221,8 @@ class RequestHandler {
       res = await request.make(captchaKey, captchaToken, captchaSessionId);
     } catch (error) {
       // Retry the specified number of times for request abortions
-      if (request.retries === this.manager.client.options.retryLimit) {
+      const retryLimit = this.manager.client.options.retryLimit ?? 1;
+      if (request.retries >= retryLimit) {
         throw new HTTPError(error.message, error.constructor.name, error.status, request);
       }
 

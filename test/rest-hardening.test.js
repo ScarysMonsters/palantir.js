@@ -305,3 +305,19 @@ describe('P1: rate limit citizenship', () => {
     expect(manager.hashes.get(route1)).toBe('H1');
   });
 });
+
+describe('P1: request retry bounding', () => {
+  test('a make() error is bounded even when options.retryLimit is not set', async () => {
+    const handler = makeHandler(async () => {});
+    delete handler.manager.client.options.retryLimit;
+    const request = makeRequest(async () => {
+      throw new TypeError('network down');
+    });
+
+    const error = await handler.execute(request).catch(e => e);
+    expect(error.constructor.name).toBe('HTTPError');
+    expect(error.message).toBe('network down');
+    // One retry, then the HTTPError — never an unbounded loop
+    expect(request.retries).toBe(1);
+  });
+});
