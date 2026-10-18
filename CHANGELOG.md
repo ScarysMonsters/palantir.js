@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [10.9.26] - 2026-10-19
+
+### Fixed
+
+- The process no longer crashes when an asynchronous event listener (`ready`, `messageCreate`, …) rejects. `captureRejections` re-emits the rejection as `error`; a permanent fallback listener now routes it to `debug` (or stderr) instead of throwing an unhandled `error` event. This is what turned a single `10008 Unknown Message` from `acceptInvite()` into `Server marked as offline`.
+- `Client#acceptInvite()` returns `null` instead of throwing when Discord blocks the join with anti-abuse `10008`; onboarding and member-verification bypass failures are now non-fatal and logged through `debug`.
+- `Message#clickButton`, `Message#selectMenu`, `TextBasedChannel#sendSlash` and `Modal#reply` no longer leave the interaction POST promise unhandled; a deleted message (`10008`) or expired interaction is logged instead of crashing Bun.
+
 ## [10.9.25] - 2026-10-18
 
 ### Fixed
@@ -53,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `UserConnectionManager` (`client.connections`) managing `/users/@me/connections` entries (domains, games, social accounts), plus `ClientUser#fetchUserAffinities()`.
 
 [Unreleased]: https://github.com/ScarysMonsters/palantir.js/commits/main
+[10.9.26]: https://www.npmjs.com/package/hipalantir/v/10.9.26
 [10.9.25]: https://www.npmjs.com/package/hipalantir/v/10.9.25
 [10.9.24]: https://www.npmjs.com/package/hipalantir/v/10.9.24
 [10.9.23]: https://www.npmjs.com/package/hipalantir/v/10.9.23
