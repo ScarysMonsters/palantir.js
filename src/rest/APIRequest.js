@@ -29,6 +29,18 @@ async function fileToBlob(source) {
   return new Blob([String(source)]);
 }
 
+/**
+ * Generates a snowflake-shaped string usable as a message nonce, mirroring what
+ * the official client sends. Discord dedupes POSTed messages by nonce, which
+ * makes a network-error retry of a message send idempotent.
+ * @returns {string}
+ */
+function nonce() {
+  return String((BigInt(Date.now() - 1420070400000) << 22n) | BigInt(Math.floor(Math.random() * 4194304)));
+}
+
+const MESSAGE_ROUTE = /^\/channels\/\d+\/messages$/;
+
 class APIRequest {
   constructor(rest, method, path, options) {
     this.rest = rest;
@@ -57,7 +69,7 @@ class APIRequest {
     return data.uri;
   }
 
-  async make(captchaKey, captchaRqToken) {
+  async make(captchaKey, captchaRqToken, captchaSessionId) {
     const API =
       this.options.versioned === false
         ? this.client.options.http.api
@@ -114,6 +126,7 @@ class APIRequest {
     // Captcha
     if (captchaKey && typeof captchaKey == 'string') headers['X-Captcha-Key'] = captchaKey;
     if (captchaRqToken && typeof captchaRqToken == 'string') headers['X-Captcha-Rqtoken'] = captchaRqToken;
+    if (captchaSessionId && typeof captchaSessionId == 'string') headers['X-Captcha-Session-Id'] = captchaSessionId;
 
     let body;
     if (this.options.files?.length) {
@@ -139,6 +152,17 @@ class APIRequest {
         body = new FormData();
         body.append('payload_json', JSON.stringify(this.options.data));
       } else {
+        /*
+         * Message sends get a nonce (user-provided one preserved) so a retry after a network
+         * error cannot double-post: the API dedupes POSTs carrying the same nonce.
+         */
+        if (
+          this.method === 'post' &&
+          MESSAGE_ROUTE.test(this.path) &&
+          this.options.data && typeof this.options.data === 'object'
+        ) {
+          this.options.data = { ...this.options.data, nonce: this.options.data.nonce ?? nonce() };
+        }
         body = JSON.stringify(this.options.data);
         headers['Content-Type'] = 'application/json';
       }
@@ -146,6 +170,12 @@ class APIRequest {
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.client.options.restRequestTimeout).unref();
+    const proxy = this._resolveProxy();
+    if (proxyUnsupported(proxy, this.client.options.http.transport)) {
+      clearTimeout(timeout);
+      const { Error: DJSError } = require('../errors');
+      throw new DJSError('PROXY_NOT_SUPPORTED');
+    }
     return this.rest
       .fetch(url, {
         method: this.method.toUpperCase(),
@@ -153,11 +183,26 @@ class APIRequest {
         body,
         signal: controller.signal,
         redirect: 'follow',
-        proxy: this._resolveProxy(),
+        proxy,
         credentials: 'include',
       })
       .finally(() => clearTimeout(timeout));
   }
 }
 
+/**
+ * A configured proxy is only honored through Bun's `fetch` (`proxy` option) or
+ * the Chrome transport (its own `CONNECT` tunneling). Under Node with the
+ * native transport the proxy would be silently ignored and the real IP would
+ * leak — the request must fail instead.
+ * @param {?string} proxyUri Resolved proxy URI, if any
+ * @param {string} transport Configured `http.transport`
+ * @returns {boolean}
+ */
+function proxyUnsupported(proxyUri, transport) {
+  return Boolean(proxyUri) && transport !== 'chrome' && !process.versions.bun;
+}
+
 module.exports = APIRequest;
+module.exports.proxyUnsupported = proxyUnsupported;
+module.exports.nonce = nonce;

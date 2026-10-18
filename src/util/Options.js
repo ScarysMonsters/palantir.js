@@ -91,7 +91,7 @@ const Intents = require('./Intents');
  * @property {number} [restRequestTimeout=15000] Time to wait before cancelling a REST request, in milliseconds
  * @property {number} [restSweepInterval=60] How frequently to delete inactive request buckets, in seconds
  * (or 0 for never)
- * @property {number} [restGlobalRateLimit=0] How many requests to allow sending per second (0 for unlimited, 50 for
+ * @property {number} [restGlobalRateLimit=50] How many requests to allow sending per second (0 for unlimited, 50 for
  * the standard global limit used by Discord)
  * @property {string[]|RateLimitQueueFilter} [rejectOnRateLimit] Decides how rate limits and pre-emptive throttles
  * should be handled. If this option is an array containing the prefix of the request route (e.g. /channels to match any
@@ -99,6 +99,8 @@ const Intents = require('./Intents');
  * {@link RateLimitError} will be thrown. Otherwise the request will be queued for later
  * @property {number} [retryLimit=1] How many times to retry on 5XX errors
  * (Infinity for an indefinite amount of retries)
+ * @property {number} [rateLimitRetryLimit=5] Maximum consecutive retries while a route keeps answering 429
+ * (a durable rate limit otherwise loops forever; exceeding this throws {@link HTTPError})
  * @property {boolean} [failIfNotExists=true] Default value for {@link ReplyMessageOptions#failIfNotExists}
  * @property {PresenceData} [presence={ status: 'online', since: 0, activities: [], afk: false }] Presence data to use upon login
  * @property {number} [waitGuildTimeout=15_000] Time in milliseconds that Clients with the GUILDS intent should wait for
@@ -204,15 +206,16 @@ class Options extends null {
       partials: ['USER', 'CHANNEL', 'GUILD_MEMBER', 'MESSAGE', 'REACTION', 'GUILD_SCHEDULED_EVENT'], // Enable the partials
       restWsBridgeTimeout: 5_000,
       restRequestTimeout: 15_000,
-      restGlobalRateLimit: 0,
+      restGlobalRateLimit: 50,
       retryLimit: 1,
+      rateLimitRetryLimit: 5,
       restTimeOffset: 500,
       restSweepInterval: 60,
       failIfNotExists: true,
       presence: { status: 'online', since: 0, activities: [], afk: true },
       sweepers: {},
       ws: {
-        capabilities: 0, // https://discord-userdoccers.vercel.app/topics/gateway#gateway-capabilities
+        capabilities: 30717, // https://discord-userdoccers.vercel.app/topics/gateway#gateway-capabilities
         properties: ClientProperties.createRuntimeProperties({
           os: 'Windows',
           browser: 'Discord Client',

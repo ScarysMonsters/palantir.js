@@ -11,6 +11,7 @@ const ActionsManager = require('./actions/ActionsManager');
 const ClientVoiceManager = require('./voice/ClientVoiceManager');
 const WebSocketManager = require('./websocket/WebSocketManager');
 const { Error, TypeError } = require('../errors');
+const DiscordAPIError = require('../rest/DiscordAPIError');
 const ClientProperties = require('../util/ClientProperties');
 const BaseGuildEmojiManager = require('../managers/BaseGuildEmojiManager');
 const BillingManager = require('../managers/BillingManager');
@@ -300,10 +301,7 @@ class Client extends BaseClient {
     );
     this.emit(
       Events.DEBUG,
-      `Provided token: ${token
-        .split('.')
-        .map((val, i) => (i > 1 ? val.replace(/./g, '*') : val))
-        .join('.')}`,
+      `Provided token: ${token.length > 4 ? `${'*'.repeat(Math.max(1, token.length - 4))}${token.slice(-4)}` : '[REDACTED]'}`,
     );
 
     if (this.options.presence) {
@@ -686,12 +684,28 @@ class Client extends BaseClient {
     const i = await this.fetchInvite(code);
     if (i.guild?.id && this.guilds.cache.has(i.guild?.id)) return this.guilds.cache.get(i.guild?.id);
     if (this.channels.cache.has(i.channelId)) return this.channels.cache.get(i.channelId);
-    const data = await this.api.invites(code).post({
-      DiscordContext: { location: 'Markdown Link' },
-      data: {
-        session_id: this.sessionId,
-      },
-    });
+    let data;
+    try {
+      data = await this.api.invites(code).post({
+        DiscordContext: {
+          location: 'Join Guild',
+          location_guild_id: i.guild?.id ?? null,
+          location_channel_id: i.channelId ?? null,
+          location_channel_type: i.channel?.type ?? 0,
+        },
+        data: {
+          session_id: this.sessionId,
+        },
+      });
+    } catch (error) {
+      if (error instanceof DiscordAPIError && error.code === 10008) {
+        this.emit(
+          Events.DEBUG,
+          `[Invite > Guild ${i.guild?.id}] Join blocked by Discord anti-abuse (code 10008 "Unknown Message"); the account may be temporarily flagged — retry later.`,
+        );
+      }
+      throw error;
+    }
     this.emit(Events.DEBUG, `[Invite > Guild ${i.guild?.id}] Joined`);
     // Guild
     if (i.guild?.id) {
@@ -732,7 +746,7 @@ class Client extends BaseClient {
         }
       }
       // Read rule
-      if (data.show_verification_form && options.bypassVerify) {
+      if ((data.show_verification_form ?? i.showVerificationForm) && options.bypassVerify) {
         // Check Guild
         if (i.guild.verificationLevel == 'VERY_HIGH' && !this.user.phone) {
           this.emit(Events.DEBUG, `[Invite > Guild ${i.guild?.id}] Cannot bypass verify (Phone required)`);
@@ -744,7 +758,7 @@ class Client extends BaseClient {
         }
         const getForm = await this.api
           .guilds(i.guild?.id)
-          ['member-verification'].get({ query: { with_guild: false, invite_code: this.code } })
+          ['member-verification'].get({ query: { with_guild: false, invite_code: code } })
           .catch(() => {});
         if (getForm && getForm.form_fields[0]) {
           const form = Object.assign(getForm.form_fields[0], { response: true });

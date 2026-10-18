@@ -44,6 +44,7 @@ defineModule('AttachmentFlags', './util/AttachmentFlags');
 // Utilities
 defineModule('BaseManager', './managers/BaseManager');
 defineModule('BitField', './util/BitField');
+defineModule('CloudflareBanError', './rest/CloudflareBanError');
 defineMember('Collection', './util/Collection', 'Collection');
 defineModule('Constants', './util/Constants');
 defineModule('DataResolver', './util/DataResolver');

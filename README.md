@@ -55,7 +55,8 @@ This is what **this fork** actually changed. The features added by the parent fo
 
 - Runs on Bun 1.1+ and uses the platform directly: native `fetch`, `WebSocket`, `FormData`, `Blob`,
   `node:zlib`, `node:crypto` and `node:stream` — no shim layer.
-- The gateway always uses `zlib-stream` compression through `node:zlib` (no native addon required).
+- The gateway supports `zlib-stream` compression through `node:zlib` (no native addon required);
+  it is **opt-in** via `ws.compress: true` — plain JSON frames by default.
 
 ### Fast startup: lazy-loaded API
 

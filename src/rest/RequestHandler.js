@@ -4,10 +4,11 @@ const { setTimeout } = require('node:timers');
 const { setTimeout: sleep } = require('node:timers/promises');
 const { AsyncQueue } = require('../util/AsyncQueue');
 const DiscordAPIError = require('./DiscordAPIError');
+const CloudflareBanError = require('./CloudflareBanError');
 const HTTPError = require('./HTTPError');
 const RateLimitError = require('./RateLimitError');
 const {
-  Events: { DEBUG, RATE_LIMIT, INVALID_REQUEST_WARNING, API_RESPONSE, API_REQUEST },
+  Events: { DEBUG, CLOUDFLARE_BAN, RATE_LIMIT, INVALID_REQUEST_WARNING, API_RESPONSE, API_REQUEST },
 } = require('../util/Constants');
 
 const captchaMessage = [
@@ -21,6 +22,17 @@ const captchaMessage = [
   'rqkey-mismatch',
   'sitekey-secret-mismatch',
 ];
+
+/**
+ * Bounded exponential backoff with jitter, in milliseconds. Scaling: 500ms,
+ * 1s, 2s, 4s ... capped at 20s. Used by the 429-without-timing and 5xx retry
+ * paths so neither can hammer the API in a tight loop.
+ * @param {number} attempt Number of retries already consumed (1 = first retry)
+ * @returns {number} Delay to sleep before the next attempt
+ */
+function backoffFor(attempt) {
+  return Math.min(2 ** Math.max(attempt - 1, 0) * 500, 20_000) + Math.floor(Math.random() * 250);
+}
 
 function parseResponse(res) {
   if (res.headers.get('content-type')?.startsWith('application/json')) return res.json();
@@ -55,6 +67,7 @@ class RequestHandler {
     this.reset = -1;
     this.remaining = -1;
     this.limit = -1;
+    this.bucket = null;
   }
 
   async push(request) {
@@ -115,7 +128,7 @@ class RequestHandler {
     }
   }
 
-  async execute(request, captchaKey, captchaToken) {
+  async execute(request, captchaKey, captchaToken, captchaSessionId) {
     /*
      * After calculations have been done, pre-emptively stop further requests
      * Potentially loop until this task can run if e.g. the global rate limit is hit twice
@@ -206,10 +219,11 @@ class RequestHandler {
     // Perform the request
     let res;
     try {
-      res = await request.make(captchaKey, captchaToken);
+      res = await request.make(captchaKey, captchaToken, captchaSessionId);
     } catch (error) {
       // Retry the specified number of times for request abortions
-      if (request.retries === this.manager.client.options.retryLimit) {
+      const retryLimit = this.manager.client.options.retryLimit ?? 1;
+      if (request.retries >= retryLimit) {
         throw new HTTPError(error.message, error.constructor.name, error.status, request);
       }
 
@@ -250,6 +264,21 @@ class RequestHandler {
       this.limit = limit ? Number(limit) : Infinity;
       this.remaining = remaining ? Number(remaining) : 1;
 
+      /*
+       * Learn the bucket hash of this route: future requests (including sibling
+       * routes that answer with the same hash) are then routed to one shared
+       * handler instead of consuming the bucket through independent queues.
+       */
+      const bucket = res.headers.get('x-ratelimit-bucket');
+      if (bucket) {
+        this.manager.hashes.set(request.route, bucket);
+        if (this.bucket !== bucket) {
+          this.bucket = bucket;
+          const bucketKey = `bucket:${bucket}`;
+          if (!this.manager.handlers.has(bucketKey)) this.manager.handlers.set(bucketKey, this);
+        }
+      }
+
       this.reset = reset || resetAfter ? calculateReset(reset, resetAfter, serverDate) : Date.now();
 
       // https://github.com/discord/discord-api-docs/issues/182
@@ -276,8 +305,13 @@ class RequestHandler {
       }
     }
 
-    // Count the invalid requests
-    if (res.status === 401 || res.status === 403 || res.status === 429) {
+    // Count the invalid requests, except 429s scoped `shared` which Discord does
+    // not count against the 10k/10min invalid-request limit
+    const countsAsInvalid =
+      res.status === 401 ||
+      res.status === 403 ||
+      (res.status === 429 && res.headers.get('x-ratelimit-scope') !== 'shared');
+    if (countsAsInvalid) {
       if (!invalidCountResetTime || invalidCountResetTime < Date.now()) {
         invalidCountResetTime = Date.now() + 1_000 * 60 * 10;
         invalidCount = 0;
@@ -310,14 +344,47 @@ class RequestHandler {
 
     // Handle 2xx and 3xx responses
     if (res.ok) {
+      const parsed = await parseResponse(res);
+
+      /*
+       * The API answers 202 with a code starting with 11 to tell the request was queued
+       * server-side instead of completed: retry after retry_after seconds (or 5s)
+       * rather than treat the envelope as a final response.
+       */
+      if (res.status === 202 && parsed?.code != null && String(parsed.code).startsWith('11')) {
+        if (request.retries >= this.manager.client.options.retryLimit) {
+          throw new DiscordAPIError(parsed, res.status, request);
+        }
+
+        const retryAfter = Number(parsed.retry_after ?? 0);
+        const waitMs = retryAfter > 0 ? retryAfter * 1_000 : 5_000;
+        request.retries++;
+        this.manager.client.emit(
+          DEBUG,
+          `[Request Handler] ${res.status} code ${parsed.code}: retrying in ${waitMs}ms (${request.method} ${request.path})`,
+        );
+        await sleep(waitMs);
+        return this.execute(request, captchaKey, captchaToken, captchaSessionId);
+      }
+
       // Nothing wrong with the request, proceed with the next one
-      return parseResponse(res);
+      return parsed;
     }
 
     // Handle 4xx responses
     if (res.status >= 400 && res.status < 500) {
       // Handle ratelimited requests
       if (res.status === 429) {
+        const rateLimitRetryLimit = this.manager.client.options.rateLimitRetryLimit ?? 5;
+        // A durable 429 otherwise loops forever: bound the consecutive retries
+        if (request.retries >= rateLimitRetryLimit) {
+          throw new HTTPError(
+            `Rate limited more than ${rateLimitRetryLimit} consecutive times on ${request.route}`,
+            'RateLimitError',
+            429,
+            request,
+          );
+        }
         const isGlobal = this.globalLimited;
         let limit, timeout;
         if (isGlobal) {
@@ -344,9 +411,22 @@ class RequestHandler {
 
         await this.onRateLimit(request, limit, timeout, isGlobal);
 
+        request.retries++;
         // If caused by a sublimit, wait it out here so other requests on the route can be handled
         if (sublimitTimeout) {
           await sleep(sublimitTimeout);
+        } else if (!isGlobal && !this.localLimited) {
+          /*
+           * No authoritative timing on this 429 (user tokens are often only sent
+           * a Retry-After and not the full ratelimit header set, and neither may
+           * be present): bounded exponential backoff so we do not hammer the route.
+           */
+          const backoff = backoffFor(request.retries);
+          this.manager.client.emit(
+            DEBUG,
+            `[Request Handler] No Retry-After on 429, backing off for ${backoff}ms (${request.method} ${request.path})`,
+          );
+          await sleep(backoff);
         }
         return this.execute(request);
       }
@@ -360,17 +440,18 @@ class RequestHandler {
           data?.captcha_service &&
           typeof this.manager.client.options.captchaSolver == 'function' &&
           request.retries < this.manager.client.options.captchaRetryLimit &&
-          captchaMessage.some(s => data.captcha_key[0].includes(s))
+          Array.isArray(data.captcha_key) &&
+          data.captcha_key.some(s => typeof s === 'string' && captchaMessage.some(m => s.includes(m)))
         ) {
           // Retry the request after a captcha is solved
           this.manager.client.emit(
             DEBUG,
-            `[Request Handler] Hit a captcha while executing a request (${data.captcha_key.join(', ')})
+            `[Request Handler] Hit a captcha while executing a request (${Array.isArray(data.captcha_key) ? data.captcha_key.join(', ') : 'unknown'})
     Method  : ${request.method}
     Path    : ${request.path}
     Route   : ${request.route}
     Sitekey : ${data.captcha_sitekey}
-    rqToken : ${data.captcha_rqtoken}`,
+    rqToken : ${data.captcha_rqtoken ? 'present' : 'absent'}`,
           );
           const captcha = await this.manager.client.options.captchaSolver(data, request.fullUserAgent);
           this.manager.client.emit(
@@ -379,11 +460,11 @@ class RequestHandler {
     Method  : ${request.method}
     Path    : ${request.path}
     Route   : ${request.route}
-    Key     : ${captcha ? `${captcha.slice(0, 120)}...` : '[Captcha not solved]'}
-    rqToken : ${data.captcha_rqtoken}`,
+    Key     : ${captcha ? `[SOLVED] (length ${captcha.length})` : '[Captcha not solved]'}
+    rqToken : ${data.captcha_rqtoken ? 'present' : 'absent'}`,
           );
           request.retries++;
-          return this.execute(request, captcha, data.captcha_rqtoken);
+          return this.execute(request, captcha, data.captcha_rqtoken, data.captcha_session_id);
         }
         // Two factor handling
         if (data?.code && data.code == 60003 && request.options.auth !== false && request.retries < 1) {
@@ -414,7 +495,7 @@ class RequestHandler {
     Method  : ${request.method}
     Path    : ${request.path}
     Route   : ${request.route}
-    mfaCode : ${otp}`,
+    mfaCode : [TOTP_CODE] (not logged)`,
             );
             // Get ticket
             const mfaData = data.mfa;
@@ -434,17 +515,56 @@ class RequestHandler {
         throw new HTTPError(err.message, err.constructor.name, err.status, request);
       }
 
+      /*
+       * A Cloudflare block (HTTP 403 carrying code 40333) never reaches the API:
+       * expose it as its own error and notify listeners so applications can pause
+       * instead of treating it as a permission error and hammering on.
+       */
+      if (res.status === 403 && data?.code === 40333) {
+        const cloudflareError = new CloudflareBanError(data, res.status, request);
+
+        /**
+         * Emitted when a request was blocked by Cloudflare (HTTP 403, code `40333`).
+         * The block is tied to the IP address or user agent, not the account; pause
+         * sending requests until it lifts.
+         * @event BaseClient#cloudflareBan
+         * @param {CloudflareBanError} error The error thrown for the blocked request
+         */
+        this.manager.client.emit(CLOUDFLARE_BAN, cloudflareError);
+        throw cloudflareError;
+      }
+
       throw new DiscordAPIError(data, res.status, request);
     }
 
     // Handle 5xx responses
     if (res.status >= 500 && res.status < 600) {
-      // Retry the specified number of times for possible serverside issues
-      if (request.retries === this.manager.client.options.retryLimit) {
+      // Retry the specified number of times for possible serverside issues (502/504/507/522/523/524 demand a backoff)
+      if (request.retries >= this.manager.client.options.retryLimit) {
         throw new HTTPError(res.statusText, res.constructor.name, res.status, request);
       }
 
+      /*
+       * The API surfaces the number of failures in a row on X-Failed-Requests;
+       * when it exceeds the retry limit there is no point waiting or retrying.
+       */
+      const failedRequests = Number(res.headers.get('x-failed-requests') ?? '0');
+      if (failedRequests >= this.manager.client.options.retryLimit) {
+        throw new HTTPError(
+          `${res.status} after ${failedRequests} server failures (X-Failed-Requests)`,
+          res.constructor.name,
+          res.status,
+          request,
+        );
+      }
+
       request.retries++;
+      const backoff = backoffFor(request.retries);
+      this.manager.client.emit(
+        DEBUG,
+        `[Request Handler] Hit a ${res.status}, retrying in ${backoff}ms (${request.method} ${request.path})`,
+      );
+      await sleep(backoff);
       return this.execute(request);
     }
 
@@ -454,6 +574,7 @@ class RequestHandler {
 }
 
 module.exports = RequestHandler;
+module.exports.backoffFor = backoffFor;
 
 /**
  * @external HTTPMethod

@@ -532,6 +532,7 @@ export class RESTManager {
   private constructor(client: Client);
   public readonly client: Client;
   public handlers: Collection<string, unknown>;
+  public hashes: Collection<string, string>;
   public versioned: true;
   public cookieJar: CookieJar;
   public fetch: typeof globalThis.fetch;
@@ -1765,6 +1766,19 @@ export class DiscordAPIError extends Error {
   public readonly isBlockedByCloudflare: boolean;
 }
 
+export class CloudflareBanError extends Error {
+  private constructor(error: unknown, status: number, request: unknown);
+  public name: 'CloudflareBanError';
+  public code: number;
+  public method: string;
+  public path: string;
+  public httpStatus: number;
+  public requestData: HTTPErrorData;
+  public retries: number;
+  public captcha: Captcha | null;
+  public readonly isBlockedByCloudflare: true;
+}
+
 export interface Captcha {
   captcha_key: string[];
   captcha_sitekey: string;
@@ -2469,6 +2483,7 @@ export class Invite extends Base {
   public stageInstance: InviteStageInstance | null;
   public guildScheduledEvent: GuildScheduledEvent | null;
   public flags: Readonly<InviteFlags>;
+  public showVerificationForm: boolean;
 }
 
 export class InviteStageInstance extends Base {
@@ -6653,6 +6668,7 @@ export interface BaseClientEvents {
   debug: [message: string];
   rateLimit: [rateLimitData: RateLimitData];
   invalidRequestWarning: [invalidRequestWarningData: InvalidRequestWarningData];
+  cloudflareBan: [error: CloudflareBanError];
 }
 
 export interface ClientEvents extends BaseClientEvents {
@@ -6821,6 +6837,7 @@ export interface ClientOptions {
   restGlobalRateLimit?: number;
   restSweepInterval?: number;
   retryLimit?: number;
+  rateLimitRetryLimit?: number;
   failIfNotExists?: boolean;
   presence?: PresenceData;
   waitGuildTimeout?: number;
@@ -6997,6 +7014,7 @@ export interface ConstantsEvents {
   INVALID_REQUEST_WARNING: 'invalidRequestWarning';
   API_RESPONSE: 'apiResponse';
   API_REQUEST: 'apiRequest';
+  CLOUDFLARE_BAN: 'cloudflareBan';
   CLIENT_READY: 'ready';
   /** @deprecated See [this issue](https://github.com/discord/discord-api-docs/issues/3690) for more information. */
   APPLICATION_COMMAND_CREATE: 'applicationCommandCreate';

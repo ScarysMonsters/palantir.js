@@ -18,9 +18,10 @@ auth.on('pending', user => {
 });
 
 auth.on('finish', token => {
-  console.log('Token received:', token);
+  // NEVER log the token itself — it is the full account credential.
+  process.env.DISCORD_TOKEN = token;
   // The token can now be used with Client#login, for example:
-  // client.login(token);
+  // client.login(process.env.DISCORD_TOKEN);
 });
 
 auth.on('cancel', () => {
