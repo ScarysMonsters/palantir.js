@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [10.9.25] - 2026-10-18
+
+### Fixed
+
+- Gateway connections crashed on every login in `10.9.24` with `ReferenceError: Cannot access 'gatewayProxy' before initialization`: the `[CONNECT]` debug block read the resolved proxy before its declaration.
+- `ws.agent: null` (or any null proxy value) crashed proxy detection; `Util#verifyProxyAgent` and `Util#checkUndiciProxyAgent` are now null-safe.
+
 ## [10.9.24] - 2026-10-18
 
 ### Added
@@ -46,5 +53,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `UserConnectionManager` (`client.connections`) managing `/users/@me/connections` entries (domains, games, social accounts), plus `ClientUser#fetchUserAffinities()`.
 
 [Unreleased]: https://github.com/ScarysMonsters/palantir.js/commits/main
+[10.9.25]: https://www.npmjs.com/package/hipalantir/v/10.9.25
 [10.9.24]: https://www.npmjs.com/package/hipalantir/v/10.9.24
 [10.9.23]: https://www.npmjs.com/package/hipalantir/v/10.9.23
