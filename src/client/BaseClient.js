@@ -14,6 +14,20 @@ class BaseClient extends EventEmitter {
   constructor(options = {}) {
     super({ captureRejections: true });
 
+    /**
+     * With `captureRejections`, a rejected promise returned by an asynchronous event listener is
+     * re-emitted as an `error` event. Without a listener, Node (and Bun) throws and kills the
+     * whole process — a single failed API call in a `ready`/`messageCreate` handler would take
+     * the client offline. Keep a permanent fallback listener so those errors are surfaced through
+     * `debug` (or stderr) instead of crashing.
+     * @private
+     */
+    this.on('error', error => {
+      const info = `[ClientError] ${error?.stack ?? error}`;
+      if (this.listenerCount('debug') > 0) this.emit('debug', info);
+      else console.error(info);
+    });
+
     if (options.intents) {
       process.emitWarning('Intents is not available.', 'DeprecationWarning');
     }

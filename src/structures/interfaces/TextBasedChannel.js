@@ -377,10 +377,14 @@ class TextBasedChannel {
       postData,
       attachments,
     );
-    this.client.api.interactions.post({
-      data: body,
-      usePayloadJSON: true,
-    });
+    this.client.api.interactions
+      .post({
+        data: body,
+        usePayloadJSON: true,
+      })
+      .catch(error => {
+        this.client.emit(Events.DEBUG, `[TextBasedChannel#sendSlash] ${error?.message ?? error}`);
+      });
     return Util.createPromiseInteraction(this.client, nonce, 5000);
   }
 

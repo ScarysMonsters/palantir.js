@@ -15,6 +15,7 @@ const Application = require('./interfaces/Application');
 const { Error } = require('../errors');
 const ReactionManager = require('../managers/ReactionManager');
 const {
+  Events,
   InteractionTypes,
   MessageTypes,
   SystemMessageTypes,
@@ -1127,9 +1128,13 @@ class Message extends Base {
         custom_id: button.customId,
       },
     };
-    this.client.api.interactions.post({
-      data,
-    });
+    this.client.api.interactions
+      .post({
+        data,
+      })
+      .catch(error => {
+        this.client.emit(Events.DEBUG, `[Message#clickButton] ${error?.message ?? error}`);
+      });
     return Util.createPromiseInteraction(this.client, nonce, 5_000, true, this);
   }
 
@@ -1198,9 +1203,13 @@ class Message extends Base {
       },
       nonce,
     };
-    this.client.api.interactions.post({
-      data,
-    });
+    this.client.api.interactions
+      .post({
+        data,
+      })
+      .catch(error => {
+        this.client.emit(Events.DEBUG, `[Message#selectMenu] ${error?.message ?? error}`);
+      });
     return Util.createPromiseInteraction(this.client, nonce, 5_000, true, this);
   }
 

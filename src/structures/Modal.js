@@ -1,7 +1,7 @@
 'use strict';
 
 const BaseMessageComponent = require('./BaseMessageComponent');
-const { InteractionTypes } = require('../util/Constants');
+const { Events, InteractionTypes } = require('../util/Constants');
 const SnowflakeUtil = require('../util/SnowflakeUtil');
 const Util = require('../util/Util');
 
@@ -140,9 +140,13 @@ class Modal {
       nonce,
       session_id: this.client.sessionId,
     };
-    this.client.api.interactions.post({
-      data: postData,
-    });
+    this.client.api.interactions
+      .post({
+        data: postData,
+      })
+      .catch(error => {
+        this.client.emit(Events.DEBUG, `[Modal#reply] ${error?.message ?? error}`);
+      });
     this.replied = true;
     return Util.createPromiseInteraction(this.client, nonce, 5_000, true, this);
   }

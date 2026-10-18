@@ -673,7 +673,8 @@ class Client extends BaseClient {
    * Join this Guild / GroupDMChannel using this invite
    * @param {InviteResolvable} invite Invite code or URL
    * @param {AcceptInviteOptions} [options] Options
-   * @returns {Promise<Guild|DMChannel|GroupDMChannel>}
+   * @returns {Promise<?Guild|DMChannel|GroupDMChannel>} The joined guild/channel, or `null` when
+   * Discord blocked the join (anti-abuse `10008`)
    * @example
    * await client.acceptInvite('https://discord.gg/genshinimpact', { bypassOnboarding: true, bypassVerify: true })
    */
@@ -703,6 +704,7 @@ class Client extends BaseClient {
           Events.DEBUG,
           `[Invite > Guild ${i.guild?.id}] Join blocked by Discord anti-abuse (code 10008 "Unknown Message"); the account may be temporarily flagged — retry later.`,
         );
+        return null;
       }
       throw error;
     }
@@ -715,34 +717,41 @@ class Client extends BaseClient {
         return guild;
       }
       if (options.bypassOnboarding) {
-        const onboardingData = await this.api.guilds[i.guild?.id].onboarding.get();
-        // Onboarding
-        if (onboardingData.enabled) {
-          const prompts = onboardingData.prompts.filter(o => o.in_onboarding);
-          if (prompts.length) {
-            const onboarding_prompts_seen = {};
-            const onboarding_responses = [];
-            const onboarding_responses_seen = {};
+        try {
+          const onboardingData = await this.api.guilds[i.guild?.id].onboarding.get();
+          // Onboarding
+          if (onboardingData.enabled) {
+            const prompts = onboardingData.prompts.filter(o => o.in_onboarding);
+            if (prompts.length) {
+              const onboarding_prompts_seen = {};
+              const onboarding_responses = [];
+              const onboarding_responses_seen = {};
 
-            const currentDate = Date.now();
+              const currentDate = Date.now();
 
-            prompts.forEach(prompt => {
-              onboarding_prompts_seen[prompt.id] = currentDate;
-              if (prompt.required) onboarding_responses.push(prompt.options[0].id);
-              prompt.options.forEach(option => {
-                onboarding_responses_seen[option.id] = currentDate;
+              prompts.forEach(prompt => {
+                onboarding_prompts_seen[prompt.id] = currentDate;
+                if (prompt.required) onboarding_responses.push(prompt.options[0].id);
+                prompt.options.forEach(option => {
+                  onboarding_responses_seen[option.id] = currentDate;
+                });
               });
-            });
 
-            await this.api.guilds[i.guild?.id]['onboarding-responses'].post({
-              data: {
-                onboarding_prompts_seen,
-                onboarding_responses,
-                onboarding_responses_seen,
-              },
-            });
-            this.emit(Events.DEBUG, `[Invite > Guild ${i.guild?.id}] Bypassed onboarding`);
+              await this.api.guilds[i.guild?.id]['onboarding-responses'].post({
+                data: {
+                  onboarding_prompts_seen,
+                  onboarding_responses,
+                  onboarding_responses_seen,
+                },
+              });
+              this.emit(Events.DEBUG, `[Invite > Guild ${i.guild?.id}] Bypassed onboarding`);
+            }
           }
+        } catch (error) {
+          this.emit(
+            Events.DEBUG,
+            `[Invite > Guild ${i.guild?.id}] Onboarding bypass failed: ${error?.message ?? error}`,
+          );
         }
       }
       // Read rule
@@ -756,16 +765,20 @@ class Client extends BaseClient {
           this.emit(Events.DEBUG, `[Invite > Guild ${i.guild?.id}] Cannot bypass verify (Email required)`);
           return this.guilds.cache.get(i.guild?.id);
         }
-        const getForm = await this.api
-          .guilds(i.guild?.id)
-          ['member-verification'].get({ query: { with_guild: false, invite_code: code } })
-          .catch(() => {});
-        if (getForm && getForm.form_fields[0]) {
-          const form = Object.assign(getForm.form_fields[0], { response: true });
-          await this.api
+        try {
+          const getForm = await this.api
             .guilds(i.guild?.id)
-            .requests['@me'].put({ data: { form_fields: [form], version: getForm.version } });
-          this.emit(Events.DEBUG, `[Invite > Guild ${i.guild?.id}] Bypassed verify`);
+            ['member-verification'].get({ query: { with_guild: false, invite_code: code } })
+            .catch(() => {});
+          if (getForm && getForm.form_fields[0]) {
+            const form = Object.assign(getForm.form_fields[0], { response: true });
+            await this.api
+              .guilds(i.guild?.id)
+              .requests['@me'].put({ data: { form_fields: [form], version: getForm.version } });
+            this.emit(Events.DEBUG, `[Invite > Guild ${i.guild?.id}] Bypassed verify`);
+          }
+        } catch (error) {
+          this.emit(Events.DEBUG, `[Invite > Guild ${i.guild?.id}] Verify bypass failed: ${error?.message ?? error}`);
         }
       }
       return guild;

@@ -906,7 +906,7 @@ export class Client<Ready extends boolean = boolean> extends BaseClient {
   public acceptInvite(
     invite: InviteResolvable,
     options?: AcceptInviteOptions,
-  ): Promise<Guild | DMChannel | GroupDMChannel>;
+  ): Promise<Guild | DMChannel | GroupDMChannel | null>;
   public redeemNitro(nitro: string, channel?: TextChannelResolvable, paymentSourceId?: Snowflake): Promise<any>;
   public authorizeURL(urlOAuth2: string, options?: OAuth2AuthorizeOptions): Promise<{ location: string }>;
   public installUserApps(applicationId: Snowflake): Promise<void>;
