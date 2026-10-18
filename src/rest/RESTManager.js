@@ -14,6 +14,8 @@ class RESTManager {
   constructor(client) {
     this.client = client;
     this.handlers = new Collection();
+    // Route -> bucket hash learned from x-ratelimit-bucket response headers
+    this.hashes = new Collection();
     this.versioned = true;
     this.globalLimit = client.options.restGlobalRateLimit > 0 ? client.options.restGlobalRateLimit : Infinity;
     this.globalRemaining = this.globalLimit;
@@ -57,11 +59,20 @@ class RESTManager {
 
   request(method, url, options = {}) {
     const apiRequest = new APIRequest(this, method, url, options);
-    let handler = this.handlers.get(apiRequest.route);
+    const hash = this.hashes.get(apiRequest.route);
+    let handler;
+
+    if (hash) {
+      // Routes sharing a bucket hash share one handler (mirrors the server-side bucket map)
+      handler = this.handlers.get(`bucket:${hash}`) ?? this.handlers.get(apiRequest.route);
+    }
 
     if (!handler) {
-      handler = new RequestHandler(this);
-      this.handlers.set(apiRequest.route, handler);
+      handler = this.handlers.get(apiRequest.route);
+      if (!handler) {
+        handler = new RequestHandler(this);
+        this.handlers.set(apiRequest.route, handler);
+      }
     }
 
     return handler.push(apiRequest);

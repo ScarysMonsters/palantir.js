@@ -260,4 +260,48 @@ describe('P1: rate limit citizenship', () => {
     const untouched = await post('/users/@me/notes', { note: 'note' });
     expect(untouched.nonce).toBeUndefined();
   });
+
+  test('routes learning the same bucket hash converge on one handler', async () => {
+    const RESTManager = require('../src/rest/RESTManager.js');
+    const manager = new RESTManager({
+      token: 'test-token',
+      listenerCount: () => 0,
+      emit: () => {},
+      options: {
+        restGlobalRateLimit: 0,
+        restSweepInterval: 0,
+        restTimeOffset: 0,
+        retryLimit: 1,
+        rejectOnRateLimit: false,
+        restRequestTimeout: 1000,
+        http: { headers: { 'User-Agent': 'test' }, transport: 'fetch' },
+        ws: { properties: {} },
+      },
+    });
+
+    const bucketHeaders = new Headers({
+      'content-type': 'application/json',
+      date: new Date().toUTCString(),
+      'x-ratelimit-bucket': 'H1',
+      'x-ratelimit-limit': '5',
+      'x-ratelimit-remaining': '4',
+      'x-ratelimit-reset': String(Math.floor(Date.now() / 1000) + 3600),
+    });
+    manager.fetch = async () => new Response('{}', { status: 200, headers: bucketHeaders });
+
+    const route1 = '/guilds/1/members';
+    const route2 = '/guilds/1/presences';
+    await manager.request('get', route1, { route: route1 });
+    // First response of route2: still routed blind (no hash known yet), then it learns H1
+    await manager.request('get', route2, { route: route2 });
+    expect(manager.hashes.get(route2)).toBe('H1');
+    // The bucket key holder must be handler1 (first to claim the bucket)
+    const handler1 = manager.handlers.get('bucket:H1');
+    // Now a subsequent route2 request converges onto handler1
+    await manager.request('get', route2, { route: route2 });
+    expect(manager.handlers.get('bucket:H1')).toBe(handler1);
+    expect(handler1.bucket).toBe('H1');
+    // Both routes point at the same hash
+    expect(manager.hashes.get(route1)).toBe('H1');
+  });
 });

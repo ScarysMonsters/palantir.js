@@ -66,6 +66,7 @@ class RequestHandler {
     this.reset = -1;
     this.remaining = -1;
     this.limit = -1;
+    this.bucket = null;
   }
 
   async push(request) {
@@ -260,6 +261,21 @@ class RequestHandler {
       const resetAfter = res.headers.get('x-ratelimit-reset-after');
       this.limit = limit ? Number(limit) : Infinity;
       this.remaining = remaining ? Number(remaining) : 1;
+
+      /*
+       * Learn the bucket hash of this route: future requests (including sibling
+       * routes that answer with the same hash) are then routed to one shared
+       * handler instead of consuming the bucket through independent queues.
+       */
+      const bucket = res.headers.get('x-ratelimit-bucket');
+      if (bucket) {
+        this.manager.hashes.set(request.route, bucket);
+        if (this.bucket !== bucket) {
+          this.bucket = bucket;
+          const bucketKey = `bucket:${bucket}`;
+          if (!this.manager.handlers.has(bucketKey)) this.manager.handlers.set(bucketKey, this);
+        }
+      }
 
       this.reset = reset || resetAfter ? calculateReset(reset, resetAfter, serverDate) : Date.now();
 
