@@ -908,7 +908,12 @@ class Util extends null {
    * @returns {boolean}
    */
   static verifyProxyAgent(object) {
-    return typeof object == 'object' && object.httpAgent instanceof Agent && object.httpsAgent instanceof Agent;
+    return (
+      object != null &&
+      typeof object === 'object' &&
+      object.httpAgent instanceof Agent &&
+      object.httpsAgent instanceof Agent
+    );
   }
 
   static checkUndiciProxyAgent(data) {
@@ -922,7 +927,7 @@ class Util extends null {
         uri: data.toString(),
       };
     }
-    if (typeof data === 'object' && typeof data.uri === 'string') return data;
+    if (data != null && typeof data === 'object' && typeof data.uri === 'string') return data;
     return false;
   }
 

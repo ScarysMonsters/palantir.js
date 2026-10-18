@@ -336,6 +336,8 @@ class WebSocketShard extends EventEmitter {
         this.inflate = null;
       }
 
+      const gatewayProxy = resolveGatewayProxy(client.options.ws.agent);
+
       this.debug(
         `[CONNECT]
     Gateway    : ${gateway}
@@ -349,7 +351,6 @@ class WebSocketShard extends EventEmitter {
       this.setHelloTimeout();
       this.setWsCloseTimeout(-1);
       this.connectedAt = Date.now();
-      const gatewayProxy = resolveGatewayProxy(client.options.ws.agent);
 
       // Adding a handshake timeout to just make sure no zombie connection appears.
       const ws = (this.connection = WebSocket.create(gateway, wsQuery, {
