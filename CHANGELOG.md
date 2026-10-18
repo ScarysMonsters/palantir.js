@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `rateLimitRetryLimit` client option (default `5`): caps how many consecutive `429` retries a request may consume; a durable rate limit now throws `RateLimitError` instead of looping.
 - `CloudflareBanError` (code `40333`) and the `cloudflareBan` event: Cloudflare blocks are surfaced as their own error and broadcast so applications can pause requests.
+- `Invite#showVerificationForm`: whether the guild's member verification (rule screening) form will be shown to the joining user.
 
 ### Changed
 
@@ -26,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rate limit buckets shared by sibling routes (same `X-RateLimit-Bucket` hash) now share a single request handler, avoiding self-inflicted `429`s on buckets like members/presences.
 - `429`s scoped `shared` are no longer counted as invalid requests toward the 10k/10min ban threshold.
 - The request-error retry is bounded even when `retryLimit` is missing from the options object.
+- `Client#acceptInvite()` sends the official client's join context (`Join Guild` with `location_guild_id` / `location_channel_id` / `location_channel_type`) instead of a bare `Markdown Link`, which Discord anti-abuse rejected as `403 10008` "Unknown Message"; a debug line now explains that block.
+- Member verification is now actually submitted after joining: the `invite_code` passed was `undefined`, and the check only looked at `show_verification_form` on the accept response (present on the resolve payload instead).
 
 ### Security
 
