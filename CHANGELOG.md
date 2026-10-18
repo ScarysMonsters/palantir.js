@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [10.9.24] - 2026-10-18
+
 ### Added
 
 - `rateLimitRetryLimit` client option (default `5`): caps how many consecutive `429` retries a request may consume; a durable rate limit now throws `RateLimitError` instead of looping.
@@ -44,4 +46,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `UserConnectionManager` (`client.connections`) managing `/users/@me/connections` entries (domains, games, social accounts), plus `ClientUser#fetchUserAffinities()`.
 
 [Unreleased]: https://github.com/ScarysMonsters/palantir.js/commits/main
+[10.9.24]: https://www.npmjs.com/package/hipalantir/v/10.9.24
 [10.9.23]: https://www.npmjs.com/package/hipalantir/v/10.9.23
