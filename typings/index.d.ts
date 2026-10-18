@@ -532,6 +532,7 @@ export class RESTManager {
   private constructor(client: Client);
   public readonly client: Client;
   public handlers: Collection<string, unknown>;
+  public hashes: Collection<string, string>;
   public versioned: true;
   public cookieJar: CookieJar;
   public fetch: typeof globalThis.fetch;
